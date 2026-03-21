@@ -1,4 +1,4 @@
-defmodule ProjetoPrisma.Syncc.RetroAchievements.Adapter do
+defmodule ProjetoPrisma.Sync.RetroAchievements.Adapter do
   @behaviour ProjetoPrisma.Sync.PlatformBehaviour
 
   alias ProjetoPrisma.Sync.RetroAchievements.Client
@@ -21,6 +21,7 @@ defmodule ProjetoPrisma.Syncc.RetroAchievements.Adapter do
     end
   end
 
+  defp hardcore_mode?(%{"HardcoreMode" => 1}), do: true
   defp hardcore_mode?(%{"HardcoreMode" => "1"}), do: true
   defp hardcore_mode?(_), do: false
 
@@ -31,19 +32,20 @@ defmodule ProjetoPrisma.Syncc.RetroAchievements.Adapter do
       cover_image: nil,
       icon_image: retroach_image_url(raw["ImageIcon"]),
       logo_image: nil,
-      playtime_minutes: raw["Playtime"]
+      playtime_minutes: nil,
     }
   end
 
   defp retroach_image_url(image_url) do
-    "https://retroachievements.org/Images/#{image_url}"
+    "https://retroachievements.org#{image_url}"
   end
 
   @impl true
   def fetch_achievements(%{external_user_id: retroach_id, api_key: api_key}, external_game_id) do
     with {:ok, %{status: 200, body: body}} <- Client.get_player_achievements(retroach_id, api_key, external_game_id) do
       achievements =
-        body
+        (body["Achievements"] || %{})
+        |> Map.values()
         |> Enum.map(&normalize_achievement/1)
 
       {:ok, achievements}
@@ -57,14 +59,16 @@ defmodule ProjetoPrisma.Syncc.RetroAchievements.Adapter do
   end
 
   defp normalize_achievement(raw) do
+    unlock_time = parse_retroach_datetime(raw["DateEarnedHardcore"] || raw["DateEarned"])
+
     %{
-      external_achievement_id: to_string(raw["AchievementID"]),
+      external_achievement_id: to_string(raw["ID"]),
       name: raw["Title"],
       description: raw["Description"],
       icon_image: achievement_icon_url(raw["BadgeName"]),
       icon_locked_image: achievement_locked_icon_url(raw["BadgeName"]),
-      achieved: true,
-      unlock_time: parse_retroach_datetime(raw["Date"])
+      achieved: not is_nil(unlock_time),
+      unlock_time: unlock_time
     }
   end
 
