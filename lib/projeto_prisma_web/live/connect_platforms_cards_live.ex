@@ -70,7 +70,7 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
             Vinculado
           </span>
           <span :if={!platform.connected}>
-            <.icon name="hero-link" class="size-4 inline-block mr-2" />
+            <i class="fas fa-link mr-2" aria-hidden="true"></i>
             Conectar
           </span>
         </button>
