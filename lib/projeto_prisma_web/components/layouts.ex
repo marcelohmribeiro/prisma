@@ -31,42 +31,51 @@ defmodule ProjetoPrismaWeb.Layouts do
     default: nil,
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
 
+  attr :variant, :string,
+    default: "default",
+    values: ["default", "bare"],
+    doc: "layout variant"
+
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
-        </a>
-      </div>
-      <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
-          <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
-          </li>
-          <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
-          </li>
-          <li>
-            <.theme_toggle />
-          </li>
-          <li>
-            <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
-              Get Started <span aria-hidden="true">&rarr;</span>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </header>
+    <%= if @variant == "bare" do %>
+      {render_slot(@inner_block)}
+    <% else %>
+      <header class="navbar px-4 sm:px-6 lg:px-8">
+        <div class="flex-1">
+          <a href="/" class="flex-1 flex w-fit items-center gap-2">
+            <img src={~p"/images/logo.svg"} width="36" />
+            <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
+          </a>
+        </div>
+        <div class="flex-none">
+          <ul class="flex flex-column px-1 space-x-4 items-center">
+            <li>
+              <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
+            </li>
+            <li>
+              <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
+            </li>
+            <li>
+              <.theme_toggle />
+            </li>
+            <li>
+              <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
+                Get Started <span aria-hidden="true">&rarr;</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </header>
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
-        {render_slot(@inner_block)}
-      </div>
-    </main>
+      <main class="px-4 py-20 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl space-y-4">
+          {render_slot(@inner_block)}
+        </div>
+      </main>
+    <% end %>
 
     <.flash_group flash={@flash} />
     """
@@ -84,11 +93,11 @@ defmodule ProjetoPrismaWeb.Layouts do
 
   def flash_group(assigns) do
     ~H"""
-    <div id={@id} aria-live="polite">
-      <.flash kind={:info} flash={@flash} />
-      <.flash kind={:error} flash={@flash} />
+    <div id={@id} aria-live="polite" class="prisma-alert-stack">
+      <.prisma_flash kind={:info} flash={@flash} title={gettext("Sucesso")} />
+      <.prisma_flash kind={:error} flash={@flash} title={gettext("Erro")} />
 
-      <.flash
+      <.prisma_flash
         id="client-error"
         kind={:error}
         title={gettext("We can't find the internet")}
@@ -97,10 +106,10 @@ defmodule ProjetoPrismaWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
-      </.flash>
+        <.icon name="hero-arrow-path" class="ml-1 size-4 motion-safe:animate-spin" />
+      </.prisma_flash>
 
-      <.flash
+      <.prisma_flash
         id="server-error"
         kind={:error}
         title={gettext("Something went wrong!")}
@@ -109,8 +118,53 @@ defmodule ProjetoPrismaWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
-      </.flash>
+        <.icon name="hero-arrow-path" class="ml-1 size-4 motion-safe:animate-spin" />
+      </.prisma_flash>
+    </div>
+    """
+  end
+
+  attr :id, :string, doc: "the optional id of flash container"
+  attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
+  attr :title, :string, default: nil
+  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+  attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
+
+  slot :inner_block, doc: "the optional inner block that renders the flash message"
+
+  defp prisma_flash(assigns) do
+    assigns = assign_new(assigns, :id, fn -> "flash-#{assigns.kind}" end)
+
+    ~H"""
+    <div
+      :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
+      id={@id}
+      role="alert"
+      class={[
+        "prisma-alert",
+        @kind == :info && "prisma-alert-info",
+        @kind == :error && "prisma-alert-error"
+      ]}
+      {@rest}
+    >
+      <div class="prisma-alert-icon">
+        <.icon :if={@kind == :info} name="hero-check-circle" class="size-5" />
+        <.icon :if={@kind == :error} name="hero-exclamation-triangle" class="size-5" />
+      </div>
+
+      <div class="prisma-alert-copy">
+        <p :if={@title} class="prisma-alert-title">{@title}</p>
+        <p class="prisma-alert-message">{msg}</p>
+      </div>
+
+      <button
+        type="button"
+        class="prisma-alert-close"
+        aria-label={gettext("close")}
+        phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
+      >
+        <.icon name="hero-x-mark" class="size-4" />
+      </button>
     </div>
     """
   end
