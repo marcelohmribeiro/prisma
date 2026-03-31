@@ -8,6 +8,7 @@ defmodule ProjetoPrisma.Accounts.ProfilePlatformAccount do
   schema "profile_platform_accounts" do
     field :external_user_id, :string
     field :profile_url, :string
+    field :api_key, :string
 
     belongs_to :profile, Profile
     belongs_to :platform, Platform
@@ -15,8 +16,8 @@ defmodule ProjetoPrisma.Accounts.ProfilePlatformAccount do
 
   def changeset(account, attrs) do
     account
-    |> cast(attrs, [:external_user_id, :profile_url, :profile_id, :platform_id])
-    |> validate_required([:external_user_id, :profile_id, :platform_id])
+    |> cast(attrs, [:external_user_id, :profile_url, :profile_id, :platform_id, :api_key])
+    |> validate_required([:external_user_id, :profile_id, :platform_id, :api_key])
     |> unique_constraint([:profile_id, :platform_id])
   end
 end
