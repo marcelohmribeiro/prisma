@@ -47,6 +47,12 @@ docker compose run --rm app mix ecto.migrate
 
 ---
 
+## Acessar banco
+
+```bash
+docker compose exec db psql -U postgres
+```
+
 ## Testes
 
 ```bash
