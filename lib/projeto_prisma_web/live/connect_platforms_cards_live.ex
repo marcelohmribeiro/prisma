@@ -463,7 +463,8 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
          {:ok, _account} <-
            Accounts.connect_platform_account(socket.assigns.profile_id, "retroachievements", %{
              "external_user_id" => username,
-             "profile_url" => "https://retroachievements.org/user/#{username}"
+             "profile_url" => "https://retroachievements.org/user/#{username}",
+             "api_key" => api_key
            }) do
       {:noreply,
        socket
