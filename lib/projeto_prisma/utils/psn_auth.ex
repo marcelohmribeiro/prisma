@@ -118,20 +118,4 @@ defmodule ProjetoPrisma.Utils.Psn_Auth do
       {:error, "URL de redirect não contém o access code. NPSSO pode ser inválido."}
     end
   end
-
-  defp extract_code_from_location(location) do
-    if String.contains?(location, "?code=") do
-      location
-      |> String.split("redirect/")
-      |> List.last()
-      |> URI.decode_query()
-      |> Map.fetch("code")
-      |> case do
-        {:ok, code} -> {:ok, code}
-        :error -> {:error, "Parâmetro 'code' não encontrado na URL de redirect"}
-      end
-    else
-      {:error, "URL de redirect não contém o access code. NPSSO pode ser inválido."}
-    end
-  end
 end
