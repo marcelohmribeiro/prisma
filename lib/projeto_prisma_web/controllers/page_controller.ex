@@ -39,4 +39,28 @@ defmodule ProjetoPrismaWeb.PageController do
     |> put_flash(:error, "Token de registro invalido")
     |> redirect(to: ~p"/register")
   end
+
+  def forgot_password(conn, _params) do
+    render(conn, :forgot_password)
+  end
+
+  def submit_forgot_password(conn, %{"email" => email}) do
+    case Accounts.get_user_by_email(email) do
+      nil ->
+        conn
+        |> put_flash(:error, "Este e-mail não está registrado em nossa base de dados")
+        |> redirect(to: ~p"/forgot-password")
+
+      _user ->
+        conn
+        |> put_flash(:info, "E-mail de recuperação enviado com sucesso!")
+        |> redirect(to: ~p"/forgot-password")
+    end
+  end
+
+  def submit_forgot_password(conn, _params) do
+    conn
+    |> put_flash(:error, "E-mail inválido")
+    |> redirect(to: ~p"/forgot-password")
+  end
 end

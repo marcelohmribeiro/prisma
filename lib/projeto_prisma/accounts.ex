@@ -72,6 +72,17 @@ defmodule ProjetoPrisma.Accounts do
   end
 
   @doc """
+  Busca um usuário pelo email.
+
+  ## Exemplos
+      iex> get_user_by_email("user@example.com")
+      %User{} | nil
+  """
+  def get_user_by_email(email) do
+    Repo.get_by(User, email: String.downcase(String.trim(email)))
+  end
+
+  @doc """
   Busca um usuário pelo ID e precarrega o profile.
 
   ## Exemplos
