@@ -8,8 +8,81 @@ defmodule ProjetoPrisma.Accounts do
 
   import Ecto.Query
   alias ProjetoPrisma.Repo
-  alias ProjetoPrisma.Accounts.{Profile, ProfilePlatformAccount, ProfileGame, ProfileAchievement}
+  alias ProjetoPrisma.Accounts.{User, Profile, ProfilePlatformAccount, ProfileGame, ProfileAchievement}
   alias ProjetoPrisma.Catalog.Platform
+
+  @doc """
+  Registra um novo usuário com senha hasheada.
+
+  ## Parâmetros
+    - `attrs` - %{email: "user@example.com", password: "secret123", username: "john_doe", full_name: "John Doe"}
+
+  ## Exemplos
+      iex> register_user(%{email: "user@example.com", password: "secret123", username: "john_doe"})
+      {:ok, %User{}}
+  """
+  def register_user(attrs) do
+    %User{}
+    |> User.registration_changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Cria um profile vinculado a um usuário.
+
+  ## Parâmetros
+    - `user` - %User{} com id e username
+
+  ## Exemplos
+      iex> create_profile_for_user(user)
+      {:ok, %Profile{}}
+  """
+  def create_profile_for_user(user) do
+    %Profile{}
+    |> Profile.changeset(%{username: user.username, user_id: user.id})
+    |> Repo.insert()
+  end
+
+  @doc """
+  Autentica um usuário por email e senha.
+
+  ## Parâmetros
+    - `email` - Email do usuário
+    - `password` - Senha em texto plano
+
+  ## Exemplos
+      iex> authenticate_user("user@example.com", "secret123")
+      {:ok, %User{}}
+
+      iex> authenticate_user("user@example.com", "wrong_password")
+      {:error, :invalid_password}
+  """
+  def authenticate_user(email, password) do
+    user = Repo.get_by(User, email: String.downcase(String.trim(email)))
+
+    cond do
+      user && Bcrypt.verify_pass(password, user.password_hash) ->
+        {:ok, user}
+      user ->
+        {:error, :invalid_password}
+      true ->
+        Bcrypt.no_user_verify()
+        {:error, :not_found}
+    end
+  end
+
+  @doc """
+  Busca um usuário pelo ID e precarrega o profile.
+
+  ## Exemplos
+      iex> get_user_with_profile(1)
+      %User{profile: %Profile{}}
+  """
+  def get_user_with_profile(user_id) do
+    User
+    |> Repo.get(user_id)
+    |> Repo.preload(:profile)
+  end
 
   @doc """
   Busca ou cria um profile.
