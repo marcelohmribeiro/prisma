@@ -60,7 +60,11 @@ defmodule ProjetoPrismaWeb.PageController do
 
         user ->
           # Gera token assinado com validade de 1 hora
-          reset_token = Phoenix.Token.sign(ProjetoPrismaWeb.Endpoint, "reset_password", user.email)
+          reset_token =
+            Phoenix.Token.sign(ProjetoPrismaWeb.Endpoint, "reset_password", %{
+              email: user.email,
+              password_hash: user.hashed_password
+            })
 
           # Constrói a URL de reset
           reset_url = ProjetoPrismaWeb.Endpoint.url() <> "/reset-password?token=#{reset_token}&email=#{URI.encode(user.email)}"
@@ -89,13 +93,18 @@ defmodule ProjetoPrismaWeb.PageController do
   def reset_password(conn, params) do
     token = Map.get(params, "token", "")
 
-    case Phoenix.Token.verify(ProjetoPrismaWeb.Endpoint, "reset_password", token, max_age: 3600) do
-      {:ok, token_email} ->
-        render(conn, :reset_password, email: token_email, token: token)
+    case verify_reset_password_token(token) do
+      {:ok, user} ->
+        render(conn, :reset_password, email: user.email, token: token)
 
       {:error, :expired} ->
         conn
         |> put_flash(:error, "O link de recuperação expirou. Solicite um novo.")
+        |> redirect(to: ~p"/forgot-password")
+
+      {:error, :used} ->
+        conn
+        |> put_flash(:error, "Este link de recuperação já foi utilizado. Solicite um novo.")
         |> redirect(to: ~p"/forgot-password")
 
       {:error, _reason} ->
@@ -105,11 +114,16 @@ defmodule ProjetoPrismaWeb.PageController do
     end
   end
 
-  def submit_reset_password(conn, %{"email" => email, "token" => token, "password" => password, "password_confirmation" => password_confirmation}) do
-    case Phoenix.Token.verify(ProjetoPrismaWeb.Endpoint, "reset_password", token, max_age: 3600) do
+  def submit_reset_password(conn, %{"email" => _email, "token" => token, "password" => password, "password_confirmation" => password_confirmation}) do
+    case verify_reset_password_token(token) do
       {:error, :expired} ->
         conn
         |> put_flash(:error, "O link de recuperação expirou. Solicite um novo.")
+        |> redirect(to: ~p"/forgot-password")
+
+      {:error, :used} ->
+        conn
+        |> put_flash(:error, "Este link de recuperação já foi utilizado. Solicite um novo.")
         |> redirect(to: ~p"/forgot-password")
 
       {:error, _reason} ->
@@ -117,19 +131,19 @@ defmodule ProjetoPrismaWeb.PageController do
         |> put_flash(:error, "Link de recuperação inválido.")
         |> redirect(to: ~p"/forgot-password")
 
-      {:ok, token_email} ->
+      {:ok, user} ->
         cond do
           String.trim(password) != String.trim(password_confirmation) ->
             conn
             |> put_flash(:error, "As senhas não coincidem.")
-            |> redirect(to: "/reset-password?token=#{URI.encode(token)}&email=#{URI.encode(email)}")
+            |> redirect(to: "/reset-password?token=#{URI.encode(token)}&email=#{URI.encode(user.email)}")
 
           true ->
-            case Accounts.reset_user_password_by_email(token_email, password) do
+            case Accounts.reset_user_password_by_email(user.email, password) do
               {:ok, _user} ->
                 conn
                 |> put_flash(:info, "Senha redefinida com sucesso.")
-                |> redirect(to: ~p"/forgot-password")
+                |> redirect(to: ~p"/login")
 
               {:error, :not_found} ->
                 conn
@@ -142,7 +156,7 @@ defmodule ProjetoPrismaWeb.PageController do
 
                 conn
                 |> put_flash(:error, "Erro ao redefinir senha: #{error_msg}")
-                |> redirect(to: "/reset-password?token=#{URI.encode(token)}&email=#{URI.encode(email)}")
+                |> redirect(to: "/reset-password?token=#{URI.encode(token)}&email=#{URI.encode(user.email)}")
             end
         end
     end
@@ -158,5 +172,31 @@ defmodule ProjetoPrismaWeb.PageController do
     conn
     |> put_flash(:error, "E-mail inválido")
     |> redirect(to: ~p"/forgot-password")
+  end
+
+  defp verify_reset_password_token(token) do
+    case Phoenix.Token.verify(ProjetoPrismaWeb.Endpoint, "reset_password", token, max_age: 3600) do
+      {:ok, %{email: token_email, password_hash: token_password_hash}} ->
+        case Accounts.get_user_by_email(token_email) do
+          nil ->
+            {:error, :invalid}
+
+          user when user.hashed_password == token_password_hash ->
+            {:ok, user}
+
+          _user ->
+            {:error, :used}
+        end
+
+      # Compatibilidade com tokens antigos emitidos antes da validação por hash.
+      {:ok, token_email} when is_binary(token_email) ->
+        case Accounts.get_user_by_email(token_email) do
+          nil -> {:error, :invalid}
+          user -> {:ok, user}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 end
