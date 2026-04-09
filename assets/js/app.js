@@ -153,9 +153,26 @@ function ensurePrismaAlertStack() {
   return stack
 }
 
+const ALERT_AUTO_DISMISS_MS = 5000
+
 function dismissPrismaAlert(alertNode) {
   alertNode.classList.add("prisma-alert-leaving")
   window.setTimeout(() => alertNode.remove(), 220)
+}
+
+function scheduleExistingFlashDismiss() {
+  const stack = document.getElementById("flash-group")
+  if (!stack) return
+
+  stack.querySelectorAll(".prisma-alert").forEach((alertNode) => {
+    if (alertNode.dataset.autoDismissScheduled === "true") return
+
+    alertNode.dataset.autoDismissScheduled = "true"
+
+    window.setTimeout(() => {
+      if (alertNode.isConnected) dismissPrismaAlert(alertNode)
+    }, ALERT_AUTO_DISMISS_MS)
+  })
 }
 
 function createPrismaAlert(detail = {}) {
@@ -163,7 +180,7 @@ function createPrismaAlert(detail = {}) {
   const kind = detail.kind === "error" ? "error" : "info"
   const title = detail.title || (kind === "error" ? "Erro" : "Sucesso")
   const message = detail.message || detail.msg || ""
-  const timeout = Number.isFinite(detail.timeout) ? detail.timeout : 4500
+  const timeout = Number.isFinite(detail.timeout) ? detail.timeout : ALERT_AUTO_DISMISS_MS
 
   if (!message) return
 
@@ -211,4 +228,39 @@ window.prismaAlert = (payload) => createPrismaAlert(payload)
 
 window.addEventListener("prisma:alert", (event) => createPrismaAlert(event.detail || {}))
 window.addEventListener("phx:prisma_alert", (event) => createPrismaAlert(event.detail || {}))
+
+window.addEventListener("load", () => {
+  scheduleExistingFlashDismiss()
+
+  const stack = document.getElementById("flash-group")
+  if (!stack) return
+
+  const observer = new MutationObserver(() => scheduleExistingFlashDismiss())
+  observer.observe(stack, {childList: true, subtree: true})
+})
+
+window.addEventListener("phx:page-loading-stop", () => {
+  scheduleExistingFlashDismiss()
+})
+
+window.addEventListener("click", (event) => {
+  const toggleButton = event.target.closest("[data-password-toggle='true']")
+  if (!toggleButton) return
+
+  const targetId = toggleButton.getAttribute("data-target-id")
+  if (!targetId) return
+
+  const passwordInput = document.getElementById(targetId)
+  if (!passwordInput) return
+
+  const toggleIcon = toggleButton.querySelector("[data-toggle-icon='true']")
+  const shouldReveal = passwordInput.type === "password"
+
+  passwordInput.type = shouldReveal ? "text" : "password"
+
+  if (toggleIcon) {
+    toggleIcon.classList.toggle("fa-eye", !shouldReveal)
+    toggleIcon.classList.toggle("fa-eye-slash", shouldReveal)
+  }
+})
 

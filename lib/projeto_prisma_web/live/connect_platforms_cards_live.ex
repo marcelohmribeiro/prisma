@@ -216,36 +216,6 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
     end
   end
 
-  def handle_event("save_steam_connection", %{"steam" => steam_params}, socket) do
-    steam_id = String.trim(steam_params["user_id"] || "")
-    api_key = String.trim(steam_params["api_key"] || "")
-
-    cond do
-      is_nil(socket.assigns.profile_id) ->
-        {:noreply,
-         socket
-         |> assign(:modal_error, "Não foi possível identificar o perfil atual")
-         |> put_flash(:error, "Não foi possível identificar o perfil atual")}
-
-      steam_id == "" or api_key == "" ->
-        {:noreply,
-         socket
-         |> assign(:modal_error, "Preencha Steam ID e API Key para continuar")
-         |> put_flash(:error, "Preencha Steam ID e API Key para continuar")
-         |> assign(:form, to_form(%{"user_id" => steam_id, "api_key" => api_key}, as: :steam))}
-
-      not valid_steam_id?(steam_id) ->
-        {:noreply,
-         socket
-         |> assign(:modal_error, "Steam ID inválido. Use o SteamID64 com 17 dígitos")
-         |> put_flash(:error, "Steam ID inválido. Use o SteamID64 com 17 dígitos")
-         |> assign(:form, to_form(%{"user_id" => steam_id, "api_key" => api_key}, as: :steam))}
-
-      true ->
-        connect_steam(socket, steam_id, api_key)
-    end
-  end
-
   defp resolve_profile_id(%{"profile_id" => profile_id}) when is_integer(profile_id),
     do: profile_id
 

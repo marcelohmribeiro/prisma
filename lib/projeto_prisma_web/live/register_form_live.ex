@@ -95,7 +95,7 @@ defmodule ProjetoPrismaWeb.RegisterFormLive do
   end
 
   defp register_user(socket, attrs) do
-    with {:ok, user} <- Accounts.register_user(attrs),
+    with {:ok, user} <- Accounts.register_user_legacy(attrs),
          {:ok, profile} <- Accounts.create_profile_for_user(user) do
       token =
         Phoenix.Token.sign(
