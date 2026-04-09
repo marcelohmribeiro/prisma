@@ -1,0 +1,217 @@
+/* Login page specific styles (mock faithful) */
+.auth-login-page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-login-page .login-card {
+  background: rgba(30, 35, 45, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 24px;
+  padding: 48px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: loginSlideUp 0.6s ease;
+}
+
+@keyframes loginSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-login-page .logo {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.auth-login-page .logo h1 {
+  font-size: 48px;
+  font-weight: 900;
+  background: linear-gradient(
+    90deg,
+    #0070cc 0%,
+    #4090dc 15%,
+    #66c0f4 25%,
+    #3ea082 40%,
+    #107c10 50%,
+    #6d9e13 65%,
+    #d4a017 80%,
+    #d4a017 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -2px;
+}
+
+.auth-login-page .logo p {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 8px;
+}
+
+.auth-login-page .form-group {
+  margin-bottom: 24px;
+}
+
+.auth-login-page .form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin-bottom: 8px;
+}
+
+.auth-login-page .input-wrapper {
+  position: relative;
+}
+
+.auth-login-page .input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.auth-login-page .form-input {
+  width: 100%;
+  padding: 14px 16px 14px 48px;
+  background: rgba(20, 25, 35, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #e5e7eb;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.auth-login-page .form-input::placeholder {
+  color: #6b7280;
+}
+
+.auth-login-page .form-input:focus {
+  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(20, 25, 35, 0.8);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.auth-login-page .password-toggle {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 16px;
+  transition: color 0.3s ease;
+  padding: 4px;
+}
+
+.auth-login-page .password-toggle:hover {
+  color: #60a5fa;
+}
+
+.auth-login-page .remember-forgot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.auth-login-page .checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-login-page .checkbox-wrapper input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.auth-login-page .checkbox-wrapper label {
+  font-size: 14px;
+  color: #d1d5db;
+  cursor: pointer;
+}
+
+.auth-login-page .forgot-link {
+  font-size: 14px;
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.auth-login-page .forgot-link:hover {
+  color: #93c5fd;
+}
+
+.auth-login-page .login-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 24px;
+}
+
+.auth-login-page .login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+}
+
+.auth-login-page .login-btn:active {
+  transform: translateY(0);
+}
+
+.auth-login-page .signup-link {
+  text-align: center;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.auth-login-page .signup-link a {
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.auth-login-page .signup-link a:hover {
+  color: #93c5fd;
+}
+
+@media (max-width: 640px) {
+  .auth-login-page .login-card {
+    padding: 32px 24px;
+  }
+
+  .auth-login-page .logo h1 {
+    font-size: 36px;
+  }
+}

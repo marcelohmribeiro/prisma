@@ -1,0 +1,49 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="text-center">
+    <.header>
+      Configuracoes da Conta
+      <:subtitle>Gerencie seu e-mail e sua senha</:subtitle>
+    </.header>
+  </div>
+
+  <.form :let={f} for={@email_changeset} action={~p"/users/settings"} id="update_email">
+    <input type="hidden" name="action" value="update_email" />
+
+    <.input
+      field={f[:email]}
+      type="email"
+      label="E-mail"
+      autocomplete="username"
+      spellcheck="false"
+      required
+    />
+
+    <.button variant="primary" phx-disable-with="Alterando...">Alterar E-mail</.button>
+  </.form>
+
+  <div class="divider" />
+
+  <.form :let={f} for={@password_changeset} action={~p"/users/settings"} id="update_password">
+    <input type="hidden" name="action" value="update_password" />
+
+    <.input
+      field={f[:password]}
+      type="password"
+      label="Nova senha"
+      autocomplete="new-password"
+      spellcheck="false"
+      required
+    />
+    <.input
+      field={f[:password_confirmation]}
+      type="password"
+      label="Confirmar nova senha"
+      autocomplete="new-password"
+      spellcheck="false"
+      required
+    />
+    <.button variant="primary" phx-disable-with="Alterando...">
+      Salvar Senha
+    </.button>
+  </.form>
+</Layouts.app>
