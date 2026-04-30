@@ -28,7 +28,6 @@ defmodule ProjetoPrismaWeb.Router do
 
     get "/", PageController, :connect_platforms
     get "/connect-platforms", PageController, :connect_platforms
-    get "/dashboard", PageController, :dashboard
     get "/profile", PageController, :profile
   end
 

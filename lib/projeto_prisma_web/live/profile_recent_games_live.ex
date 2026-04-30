@@ -147,6 +147,7 @@ defmodule ProjetoPrismaWeb.ProfileRecentGamesLive do
   defp listed_games(games), do: games
 
   defp cover_image(%{game_cover_image: img}) when is_binary(img) and img != "", do: img
+  defp cover_image(%{game_icon_image: img}) when is_binary(img) and img != "", do: img
   defp cover_image(_), do: "https://placehold.co/96x96/1e293b/e2e8f0?text=Game"
 
   defp format_playtime(minutes) when is_integer(minutes) and minutes >= 0 do

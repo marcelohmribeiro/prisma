@@ -111,9 +111,11 @@ defmodule ProjetoPrismaWeb.ProfileRecentlyPlayedLive do
 
   defp remaining_count(_), do: 0
 
+  defp hero_image(%{game_icon_image: img}) when is_binary(img) and img != "", do: img
   defp hero_image(%{game_cover_image: img}) when is_binary(img) and img != "", do: img
   defp hero_image(_), do: "https://placehold.co/1200x360/0f172a/94a3b8?text=Sem+capa"
 
+  defp thumb_image(%{game_icon_image: img}) when is_binary(img) and img != "", do: img
   defp thumb_image(%{game_cover_image: img}) when is_binary(img) and img != "", do: img
   defp thumb_image(_), do: "https://placehold.co/184x69/1e293b/e2e8f0?text=Game"
 

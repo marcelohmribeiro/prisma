@@ -158,6 +158,7 @@ defmodule ProjetoPrisma.Accounts.ProfileDashboard do
         platform_game_id: pgame.id,
         game_name: g.name,
         game_cover_image: g.cover_image,
+        game_icon_image: g.icon_image,
         playtime_minutes: pg.playtime_minutes,
         last_played: pg.last_played,
         platform_name: p.name,
