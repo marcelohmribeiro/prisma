@@ -32,8 +32,9 @@ defmodule ProjetoPrisma.Utils.Psn.Psn_Auth do
         extract_code_from_location(location)
 
       {:ok, _} ->
-        {:error, "Problema ao obter o access code. Verifique se o NPSSO é válido. " <>
-          "Para obter um novo NPSSO, acesse https://ca.account.sony.com/api/v1/ssocookie"}
+        {:error,
+         "Problema ao obter o access code. Verifique se o NPSSO é válido. " <>
+           "Para obter um novo NPSSO, acesse https://ca.account.sony.com/api/v1/ssocookie"}
 
       {:error, reason} ->
         {:error, "Erro na requisição: #{inspect(reason)}"}

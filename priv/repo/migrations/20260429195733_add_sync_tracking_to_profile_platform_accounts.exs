@@ -2,6 +2,5 @@ defmodule ProjetoPrisma.Repo.Migrations.AddSyncTrackingToProfilePlatformAccounts
   use Ecto.Migration
 
   def change do
-
   end
 end

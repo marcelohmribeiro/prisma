@@ -125,7 +125,8 @@ defmodule ProjetoPrisma.Sync.Igdb.Client do
   end
 
   defp get_body_value(body, key) when is_map(body) do
-    Map.get(body, key) || Map.get(body, String.to_existing_atom(key)) || Map.get(body, String.to_atom(key))
+    Map.get(body, key) || Map.get(body, String.to_existing_atom(key)) ||
+      Map.get(body, String.to_atom(key))
   rescue
     ArgumentError ->
       Map.get(body, key)

@@ -13,7 +13,7 @@ defmodule ProjetoPrisma.Catalog.Game do
   def changeset(game, attrs) do
     game
     |> cast(attrs, [:igdb_id, :name, :cover_image, :icon_image, :logo_image])
-    |> validate_required([:name, :igdb_id])
+    |> validate_required([:name])
     |> unique_constraint(:igdb_id)
   end
 end

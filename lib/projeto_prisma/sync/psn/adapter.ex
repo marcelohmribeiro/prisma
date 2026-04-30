@@ -8,9 +8,9 @@ defmodule ProjetoPrisma.Sync.Psn.Adapter do
   def fetch_games(%{external_user_id: psn_id, api_key: npsso}) do
     with {:ok, auth_tokens} <- Psn_Auth.authenticate(npsso),
          access_token = auth_tokens[:access_token],
-         {:ok, %{status: 200, body: trophy_body}} <- Client.get_player_trophy_titles(psn_id, access_token),
+         {:ok, %{status: 200, body: trophy_body}} <-
+           Client.get_player_trophy_titles(psn_id, access_token),
          {:ok, %{status: 200, body: owned_body}} <- Client.get_owned_games(psn_id, access_token) do
-
       playtime_map =
         owned_body["titles"]
         |> Enum.reduce(%{}, fn raw, acc ->
@@ -26,35 +26,34 @@ defmodule ProjetoPrisma.Sync.Psn.Adapter do
     else
       {:ok, %{status: status, body: body}} ->
         {:error, {:http_error, status, body}}
+
       {:error, reason} ->
         {:error, reason}
     end
   end
 
   @impl true
-  def fetch_achievements(%{external_user_id: psn_id, api_key: npsso}, _game_external_id) do
+  def fetch_achievements(%{external_user_id: psn_id, api_key: npsso}, game_ref) do
+    {game_external_id, np_service_name} = achievement_game_ref(game_ref)
+
     with {:ok, auth_tokens} <- Psn_Auth.authenticate(npsso),
          access_token = auth_tokens[:access_token],
-         {:ok, %{status: 200, body: titles_body}} <-
-           Client.get_player_trophy_titles(psn_id, access_token) do
+         {:ok, %{status: 200, body: player_trophy}} <-
+           Client.get_player_achievement(psn_id, game_external_id, access_token, np_service_name),
+         {:ok, %{status: 200, body: detail_body}} <-
+           Client.get_detail_achievement(game_external_id, access_token, np_service_name) do
       achievements =
-        titles_body["trophyTitles"]
-        |> Enum.flat_map(fn title ->
-          npCommunicationId = title["npCommunicationId"]
-          with {:ok, %{status: 200, body: player_trophy}} <-
-                 Client.get_player_achievement(psn_id, npCommunicationId, access_token),
-               {:ok, %{status: 200, body: detail_body}} <-
-                 Client.get_detail_achievement(npCommunicationId, access_token) do
-            player_trophy["trophies"]
-            |> Enum.map(&normalize_achievement(&1, detail_body, title))
-          else
-            _ -> []
-          end
-        end)
+        player_trophy["trophies"]
+        |> List.wrap()
+        |> Enum.map(
+          &normalize_achievement(&1, detail_body, %{"npCommunicationId" => game_external_id})
+        )
+
       {:ok, achievements}
     else
       {:ok, %{status: status, body: body}} ->
         {:error, {:http_error, status, body}}
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -67,9 +66,19 @@ defmodule ProjetoPrisma.Sync.Psn.Adapter do
       cover_image: nil,
       icon_image: raw["trophyTitleIconUrl"],
       logo_image: raw["trophyTitleIconUrl"],
+      np_service_name: raw["npServiceName"],
       playtime_minutes: Map.get(playtime_map, raw["trophyTitleName"], 0)
     }
   end
+
+  defp achievement_game_ref(%{} = game_ref) do
+    {
+      Map.get(game_ref, :external_game_id) || Map.get(game_ref, "external_game_id"),
+      Map.get(game_ref, :np_service_name) || Map.get(game_ref, "np_service_name")
+    }
+  end
+
+  defp achievement_game_ref(game_external_id), do: {game_external_id, nil}
 
   defp normalize_achievement(player_trophy, detail_body, title) do
     detail_trophy =
@@ -96,7 +105,7 @@ defmodule ProjetoPrisma.Sync.Psn.Adapter do
   defp parse_play_duration(""), do: 0
 
   defp parse_play_duration(duration) when is_binary(duration) do
-    hours   = Regex.run(~r/(\d+)H/, duration) |> extract_number()
+    hours = Regex.run(~r/(\d+)H/, duration) |> extract_number()
     minutes = Regex.run(~r/(\d+)M/, duration) |> extract_number()
     hours * 60 + minutes
   end

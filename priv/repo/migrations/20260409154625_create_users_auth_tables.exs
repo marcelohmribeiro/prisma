@@ -15,16 +15,16 @@ defmodule ProjetoPrisma.Repo.Migrations.CreateUsersAuthTables do
     execute "CREATE UNIQUE INDEX IF NOT EXISTS users_email_index ON users (email)", ""
 
     execute """
-    CREATE TABLE IF NOT EXISTS users_tokens (
-      id bigserial PRIMARY KEY,
-      user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      token bytea NOT NULL,
-      context varchar(255) NOT NULL,
-      sent_to varchar(255),
-      authenticated_at timestamp(0),
-      inserted_at timestamp(0) NOT NULL
-    )
-    """,
+            CREATE TABLE IF NOT EXISTS users_tokens (
+              id bigserial PRIMARY KEY,
+              user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+              token bytea NOT NULL,
+              context varchar(255) NOT NULL,
+              sent_to varchar(255),
+              authenticated_at timestamp(0),
+              inserted_at timestamp(0) NOT NULL
+            )
+            """,
             ""
 
     execute "CREATE INDEX IF NOT EXISTS users_tokens_user_id_index ON users_tokens (user_id)", ""

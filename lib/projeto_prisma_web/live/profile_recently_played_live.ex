@@ -55,7 +55,8 @@ defmodule ProjetoPrismaWeb.ProfileRecentlyPlayedLive do
             <div
               class="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
               style={"width: #{completion_percent(@game)}%;"}
-            ></div>
+            >
+            </div>
           </div>
         </div>
 

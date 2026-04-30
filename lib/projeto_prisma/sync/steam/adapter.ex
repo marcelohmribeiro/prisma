@@ -14,7 +14,9 @@ defmodule ProjetoPrisma.Sync.Steam.Adapter do
   def fetch_games(%{external_user_id: steam_id, api_key: key}) do
     with {:ok, %{status: 200, body: body}} <- Client.get_owned_games(steam_id, key) do
       games =
-        body["response"]["games"]
+        body
+        |> get_in(["response", "games"])
+        |> List.wrap()
         |> Enum.map(&normalize_game/1)
 
       {:ok, games}
@@ -34,12 +36,16 @@ defmodule ProjetoPrisma.Sync.Steam.Adapter do
          {:ok, %{status: 200, body: body}} <-
            Client.get_player_achievements(steam_id, game_external_id, key) do
       meta =
-        schema_body["game"]["availableGameStats"]["achievements"]
+        schema_body
+        |> get_in(["game", "availableGameStats", "achievements"])
+        |> List.wrap()
         |> Enum.map(fn m -> {m["name"], m} end)
         |> Map.new()
 
       achievements =
-        body["playerstats"]["achievements"]
+        body
+        |> get_in(["playerstats", "achievements"])
+        |> List.wrap()
         |> Enum.map(&normalize_achievement(&1, meta))
 
       {:ok, achievements}

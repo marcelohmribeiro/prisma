@@ -228,6 +228,7 @@ window.prismaAlert = (payload) => createPrismaAlert(payload)
 
 window.addEventListener("prisma:alert", (event) => createPrismaAlert(event.detail || {}))
 window.addEventListener("phx:prisma_alert", (event) => createPrismaAlert(event.detail || {}))
+window.addEventListener("phx:dashboard_sync_reload", () => window.location.reload())
 
 window.addEventListener("load", () => {
   scheduleExistingFlashDismiss()
@@ -263,4 +264,3 @@ window.addEventListener("click", (event) => {
     toggleIcon.classList.toggle("fa-eye-slash", shouldReveal)
   }
 })
-

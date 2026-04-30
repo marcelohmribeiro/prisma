@@ -27,7 +27,9 @@ defmodule ProjetoPrisma.Accounts.User do
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "deve ter formato valido")
     |> validate_length(:password, min: 6, message: "deve ter no minimo 6 caracteres")
     |> validate_length(:username, min: 3, message: "deve ter no minimo 3 caracteres")
-    |> validate_format(:username, ~r/^[a-z0-9_]+$/, message: "apenas letras, numeros e underscore")
+    |> validate_format(:username, ~r/^[a-z0-9_]+$/,
+      message: "apenas letras, numeros e underscore"
+    )
     |> unsafe_validate_unique(:email, ProjetoPrisma.Repo)
     |> unique_constraint(:email)
     |> unsafe_validate_unique(:username, ProjetoPrisma.Repo)

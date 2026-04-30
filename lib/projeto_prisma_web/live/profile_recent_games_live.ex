@@ -51,7 +51,6 @@ defmodule ProjetoPrismaWeb.ProfileRecentGamesLive do
 
       <div class="space-y-2 mt-2">
         <div :for={game <- listed_games(@games)}>
-
           <%!-- Card mobile --%>
           <div class="mobile-game-card md:hidden p-3 rounded-lg mb-2 bg-transparent">
             <div class="mobile-top-row flex items-center gap-3">
@@ -75,7 +74,8 @@ defmodule ProjetoPrismaWeb.ProfileRecentGamesLive do
                     <div
                       class="progress-fill bg-emerald-500"
                       style={"width: #{game.completion_percent}%;"}
-                    ></div>
+                    >
+                    </div>
                   </div>
                   <div class="flex items-center justify-between text-xs text-gray-400 mt-1">
                     <span>{game.completion_percent}%</span>
@@ -87,7 +87,9 @@ defmodule ProjetoPrismaWeb.ProfileRecentGamesLive do
             <div class="mobile-meta-extra mt-2 text-xs text-gray-400 flex items-center justify-between gap-3">
               <div>
                 <div class="font-semibold">{format_playtime(game.playtime_minutes)}</div>
-                <div class="text-xs text-gray-500">Total {format_playtime(game.playtime_minutes)}</div>
+                <div class="text-xs text-gray-500">
+                  Total {format_playtime(game.playtime_minutes)}
+                </div>
               </div>
               <div class="flex items-center space-x-2">
                 <span class="platform-badge inline-block px-3 py-1 rounded text-xs bg-blue-700/30">
@@ -108,7 +110,8 @@ defmodule ProjetoPrismaWeb.ProfileRecentGamesLive do
                 <div
                   class="progress-fill bg-gradient-to-r from-green-500 to-emerald-600"
                   style={"width: #{game.completion_percent}%;"}
-                ></div>
+                >
+                </div>
               </div>
               <span class="text-xs text-gray-400 mt-1 block">{game.completion_percent}%</span>
             </div>
@@ -121,7 +124,9 @@ defmodule ProjetoPrismaWeb.ProfileRecentGamesLive do
             <div class="col-span-6 md:col-span-2">
               <div class="text-sm">
                 <div>{format_playtime(game.playtime_minutes)}</div>
-                <div class="text-gray-400 text-xs">Total {format_playtime(game.playtime_minutes)}</div>
+                <div class="text-gray-400 text-xs">
+                  Total {format_playtime(game.playtime_minutes)}
+                </div>
               </div>
             </div>
             <div class="col-span-6 md:col-span-2">
@@ -134,7 +139,6 @@ defmodule ProjetoPrismaWeb.ProfileRecentGamesLive do
               <span class="platform-badge">{game.platform_name}</span>
             </div>
           </div>
-
         </div>
       </div>
     </div>

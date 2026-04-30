@@ -17,6 +17,7 @@ defmodule ProjetoPrisma.Sync.PlatformBehaviour do
           cover_image: String.t() | nil,
           icon_image: String.t() | nil,
           logo_image: String.t() | nil,
+          np_service_name: String.t() | nil,
           playtime_minutes: integer() | nil
         }
 
@@ -42,6 +43,6 @@ defmodule ProjetoPrisma.Sync.PlatformBehaviour do
 
   Retorna uma lista de achievements normalizados.
   """
-  @callback fetch_achievements(account :: account(), game_external_id :: String.t()) ::
+  @callback fetch_achievements(account :: account(), game_external_id :: String.t() | map()) ::
               {:ok, [achievement()]} | {:error, term()}
 end
