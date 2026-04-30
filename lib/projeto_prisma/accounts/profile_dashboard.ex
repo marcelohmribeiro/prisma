@@ -36,7 +36,9 @@ defmodule ProjetoPrisma.Accounts.ProfileDashboard do
   @doc """
   Lista jogos recentes com metricas para tabela.
   """
-  def recent_games(profile_id, limit \\ 10) when is_integer(profile_id) do
+  def recent_games(profile_id, limit \\ 10)
+
+  def recent_games(profile_id, limit) when is_integer(profile_id) do
     games_with_metrics(profile_id, limit: limit)
   end
 

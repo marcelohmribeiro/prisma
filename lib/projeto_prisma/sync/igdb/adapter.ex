@@ -9,13 +9,56 @@ defmodule ProjetoPrisma.Sync.Igdb.Adapter do
 
   alias ProjetoPrisma.Sync.Igdb.Client
 
+  @igdb_external_platforms %{
+    steam: [6],
+    playstation: [167, 48, 9, 46, 7, 8],
+    xbox: [169, 49, 12, 11]
+  }
+
+  @doc """
+  Enriquece um jogo normalizado da plataforma com dados da IGDB.
+
+  Quando a IGDB não tem vínculo por ID externo, tenta buscar pelo nome.
+  Se ainda assim não encontrar, retorna os dados da própria plataforma para
+  que o sync não descarte jogos/troféus por falta de enriquecimento.
+  """
+  def enrich_game(game_data, platform_slug) do
+    external_game_id = get_value(game_data, :external_game_id)
+    name = get_value(game_data, :name)
+
+    with {:ok, igdb_id} <- resolve_game_id(external_game_id, platform_slug),
+         {:ok, igdb_game} <- get_game_by_id(igdb_id) do
+      {:ok, merge_platform_images(igdb_game, game_data)}
+    else
+      _ ->
+        fallback_game_by_name(name, game_data)
+    end
+  end
+
   @doc """
   Resolve o igdb_id de um jogo externo.
 
   Retorna {:ok, igdb_id} ou {:error, reason}
   """
-  def resolve_game_id(external_game_id, platform_id)
-      when is_binary(external_game_id) and is_integer(platform_id) do
+  def resolve_game_id(external_game_id, platform_slug)
+      when is_binary(external_game_id) do
+    platform_slug
+    |> igdb_external_platform_ids()
+    |> try_external_game_platforms(external_game_id)
+  end
+
+  def resolve_game_id(_, _), do: {:error, :invalid_external_game_id}
+
+  defp try_external_game_platforms([], _external_game_id), do: {:error, :unsupported_platform}
+
+  defp try_external_game_platforms([platform_id | rest], external_game_id) do
+    case resolve_game_id_for_igdb_platform(external_game_id, platform_id) do
+      {:error, _} -> try_external_game_platforms(rest, external_game_id)
+      result -> result
+    end
+  end
+
+  defp resolve_game_id_for_igdb_platform(external_game_id, platform_id) do
     query =
       [
         "fields id,game,uid,platform,category;",
@@ -24,7 +67,7 @@ defmodule ProjetoPrisma.Sync.Igdb.Adapter do
       ]
       |> Enum.join(" ")
 
-    case Client.request(:external_games, query) do
+    case request(:external_games, query) do
       {:ok, %{status: 200, body: body}} ->
         case List.wrap(body) do
           [first | _] ->
@@ -45,6 +88,18 @@ defmodule ProjetoPrisma.Sync.Igdb.Adapter do
     end
   end
 
+  defp igdb_external_platform_ids(slug) when is_atom(slug),
+    do: Map.get(@igdb_external_platforms, slug, [])
+
+  defp igdb_external_platform_ids(slug) when is_binary(slug) do
+    case slug do
+      "steam" -> Map.fetch!(@igdb_external_platforms, :steam)
+      "playstation" -> Map.fetch!(@igdb_external_platforms, :playstation)
+      "xbox" -> Map.fetch!(@igdb_external_platforms, :xbox)
+      _ -> []
+    end
+  end
+
   @doc """
   Busca os dados do game na IGDB a partir do id interno da IGDB.
   """
@@ -57,7 +112,7 @@ defmodule ProjetoPrisma.Sync.Igdb.Adapter do
       ]
       |> Enum.join(" ")
 
-    case Client.request(:games, query) do
+    case request(:games, query) do
       {:ok, %{status: 200, body: body}} ->
         case List.wrap(body) do
           [first | _] -> {:ok, normalize_game(first)}
@@ -89,7 +144,7 @@ defmodule ProjetoPrisma.Sync.Igdb.Adapter do
       ]
       |> Enum.join(" ")
 
-    case Client.request(:games, query) do
+    case request(:games, query) do
       {:ok, %{status: 200, body: body}} ->
         games =
           List.wrap(body)
@@ -113,6 +168,45 @@ defmodule ProjetoPrisma.Sync.Igdb.Adapter do
       icon_image: nil,
       logo_image: nil
     }
+  end
+
+  defp fallback_game_by_name(nil, game_data), do: {:ok, platform_game_attrs(game_data)}
+
+  defp fallback_game_by_name(name, game_data) when is_binary(name) do
+    case search_games_by_name(name, limit: 1) do
+      {:ok, [igdb_game | _]} -> {:ok, merge_platform_images(igdb_game, game_data)}
+      _ -> {:ok, platform_game_attrs(game_data)}
+    end
+  end
+
+  defp platform_game_attrs(game_data) do
+    %{
+      igdb_id: nil,
+      name: get_value(game_data, :name),
+      cover_image: get_value(game_data, :cover_image),
+      icon_image: get_value(game_data, :icon_image),
+      logo_image: get_value(game_data, :logo_image)
+    }
+  end
+
+  defp merge_platform_images(igdb_game, game_data) do
+    %{
+      igdb_game
+      | cover_image: igdb_game.cover_image || get_value(game_data, :cover_image),
+        icon_image: igdb_game.icon_image || get_value(game_data, :icon_image),
+        logo_image: igdb_game.logo_image || get_value(game_data, :logo_image)
+    }
+  end
+
+  defp get_value(map, key) when is_map(map),
+    do: Map.get(map, key) || Map.get(map, Atom.to_string(key))
+
+  defp get_value(_, _), do: nil
+
+  defp request(resource, query) do
+    Client.request(resource, query)
+  rescue
+    System.EnvError -> {:error, :missing_igdb_credentials}
   end
 
   defp cover_url(%{"url" => url}), do: cover_url(url)

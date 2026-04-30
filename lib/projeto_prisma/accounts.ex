@@ -8,7 +8,16 @@ defmodule ProjetoPrisma.Accounts do
 
   import Ecto.Query
   alias ProjetoPrisma.Repo
-  alias ProjetoPrisma.Accounts.{User, Profile, ProfilePlatformAccount, ProfileGame, ProfileAchievement, Scope}
+
+  alias ProjetoPrisma.Accounts.{
+    User,
+    Profile,
+    ProfilePlatformAccount,
+    ProfileGame,
+    ProfileAchievement,
+    Scope
+  }
+
   alias ProjetoPrisma.Catalog.Platform
 
   @doc """
@@ -63,23 +72,14 @@ defmodule ProjetoPrisma.Accounts do
     cond do
       user && User.valid_password?(user, password) ->
         {:ok, user}
+
       user ->
         {:error, :invalid_password}
+
       true ->
         Bcrypt.no_user_verify()
         {:error, :not_found}
     end
-  end
-
-  @doc """
-  Busca um usuário pelo email.
-
-  ## Exemplos
-      iex> get_user_by_email("user@example.com")
-      %User{} | nil
-  """
-  def get_user_by_email(email) do
-    Repo.get_by(User, email: String.downcase(String.trim(email)))
   end
 
   @doc """
@@ -251,9 +251,11 @@ defmodule ProjetoPrisma.Accounts do
   def update_user_username(%ProjetoPrisma.Accounts.Scope{user: %User{id: user_id}}, username) do
     Repo.transact(fn ->
       with %User{} = user <- Repo.get(User, user_id),
-           {:ok, updated_user} <- user |> User.username_changeset(%{username: username}) |> Repo.update(),
+           {:ok, updated_user} <-
+             user |> User.username_changeset(%{username: username}) |> Repo.update(),
            %Profile{} = profile <- Repo.get_by(Profile, user_id: user_id),
-           {:ok, _updated_profile} <- profile |> Profile.changeset(%{username: username}) |> Repo.update() do
+           {:ok, _updated_profile} <-
+             profile |> Profile.changeset(%{username: username}) |> Repo.update() do
         {:ok, updated_user}
       else
         nil -> {:error, :not_found}
@@ -267,7 +269,11 @@ defmodule ProjetoPrisma.Accounts do
   @doc """
   Cria ou atualiza o avatar do perfil.
   """
-  def upsert_profile_avatar(%ProjetoPrisma.Accounts.Scope{user: %User{id: user_id}}, data, content_type) do
+  def upsert_profile_avatar(
+        %ProjetoPrisma.Accounts.Scope{user: %User{id: user_id}},
+        data,
+        content_type
+      ) do
     alias ProjetoPrisma.Accounts.ProfileAvatar
 
     case Repo.get_by(Profile, user_id: user_id) do
@@ -335,7 +341,7 @@ defmodule ProjetoPrisma.Accounts do
       nil ->
         %ProfilePlatformAccount{}
         |> ProfilePlatformAccount.changeset(
-          Map.merge(attrs, %{
+          Map.merge(stringify_keys(attrs), %{
             "profile_id" => profile_id,
             "platform_id" => platform_id
           })
@@ -484,7 +490,7 @@ defmodule ProjetoPrisma.Accounts do
       nil ->
         %ProfileGame{}
         |> ProfileGame.changeset(
-          Map.merge(attrs, %{
+          Map.merge(stringify_keys(attrs), %{
             "profile_id" => profile_id,
             "platform_game_id" => platform_game_id
           })
@@ -519,7 +525,7 @@ defmodule ProjetoPrisma.Accounts do
       nil ->
         %ProfileAchievement{}
         |> ProfileAchievement.changeset(
-          Map.merge(attrs, %{
+          Map.merge(stringify_keys(attrs), %{
             "profile_game_id" => profile_game_id,
             "achievement_id" => achievement_id
           })
@@ -584,6 +590,10 @@ defmodule ProjetoPrisma.Accounts do
   defp format_sync_error(reason) when is_binary(reason), do: reason
   defp format_sync_error(reason), do: inspect(reason)
 
+  defp stringify_keys(attrs) when is_map(attrs) do
+    Map.new(attrs, fn {key, value} -> {to_string(key), value} end)
+  end
+
   alias ProjetoPrisma.Accounts.{UserToken, UserNotifier}
   alias ProjetoPrisma.Services.EmailResend
 
@@ -602,7 +612,7 @@ defmodule ProjetoPrisma.Accounts do
 
   """
   def get_user_by_email(email) when is_binary(email) do
-    Repo.get_by(User, email: email)
+    Repo.get_by(User, email: String.downcase(String.trim(email)))
   end
 
   @doc """

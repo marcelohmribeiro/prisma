@@ -6,10 +6,15 @@ defmodule ProjetoPrismaWeb.ProfilePlatformDistributionLive do
   alias ProjetoPrisma.Accounts.Scope
 
   @platforms [
-    %{slug: "playstation",      name: "PlayStation",       color: "#0070CC", icon: "fab fa-playstation"},
-    %{slug: "xbox",             name: "Xbox",              color: "#107C10", icon: "fab fa-xbox"},
-    %{slug: "steam",            name: "Steam",             color: "#66c0f4", icon: "fab fa-steam"},
-    %{slug: "retroachievements",name: "RetroAchievements", color: "#D4A017", icon: "fas fa-gamepad"}
+    %{slug: "playstation", name: "PlayStation", color: "#0070CC", icon: "fab fa-playstation"},
+    %{slug: "xbox", name: "Xbox", color: "#107C10", icon: "fab fa-xbox"},
+    %{slug: "steam", name: "Steam", color: "#66c0f4", icon: "fab fa-steam"},
+    %{
+      slug: "retroachievements",
+      name: "RetroAchievements",
+      color: "#D4A017",
+      icon: "fas fa-gamepad"
+    }
   ]
 
   @impl true
@@ -42,7 +47,8 @@ defmodule ProjetoPrismaWeb.ProfilePlatformDistributionLive do
           class="transition-all duration-500 hover:opacity-80 cursor-pointer"
           style={"width: #{item.percentage}%; background-color: #{item.color};"}
           title={"#{item.name} - #{display_percent(item.percentage)}%"}
-        ></div>
+        >
+        </div>
       </div>
 
       <%!-- Legenda desktop --%>

@@ -20,21 +20,23 @@ defmodule ProjetoPrisma.Sync.Psn.Client do
     )
   end
 
-  def get_detail_achievement(npCommunicationId, access_token) do
+  def get_detail_achievement(npCommunicationId, access_token, np_service_name \\ nil) do
     Req.get(
       "#{@base_url}/trophy/v1/npCommunicationIds/#{npCommunicationId}/trophyGroups/all/trophies",
       headers: [
         Authorization: "Bearer #{access_token}"
-      ]
+      ],
+      params: np_service_name_params(np_service_name)
     )
   end
 
-  def get_player_achievement(psn_id, npCommunicationId, access_token) do
+  def get_player_achievement(psn_id, npCommunicationId, access_token, np_service_name \\ nil) do
     Req.get(
       "#{@base_url}/trophy/v1/users/#{psn_id}/npCommunicationIds/#{npCommunicationId}/trophyGroups/all/trophies",
       headers: [
         Authorization: "Bearer #{access_token}"
-      ]
+      ],
+      params: np_service_name_params(np_service_name)
     )
   end
 
@@ -42,6 +44,7 @@ defmodule ProjetoPrisma.Sync.Psn.Client do
     case Psn_Auth.authenticate(npsso) do
       {:ok, auth_tokens} ->
         access_token = auth_tokens[:access_token]
+
         Req.get("#{@other_url}/userProfile/v1/users/#{psn_id}/profile2",
           headers: [
             Authorization: "Bearer #{access_token}"
@@ -49,4 +52,8 @@ defmodule ProjetoPrisma.Sync.Psn.Client do
         )
     end
   end
+
+  defp np_service_name_params(nil), do: []
+  defp np_service_name_params(""), do: []
+  defp np_service_name_params(np_service_name), do: [npServiceName: np_service_name]
 end

@@ -5,7 +5,6 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
   alias ProjetoPrisma.Accounts.Scope
   alias ProjetoPrisma.Sync.Steam.Client, as: SteamClient
   alias ProjetoPrisma.Sync.RetroAchievements.Client, as: RetroClient
-  alias ProjetoPrisma.Sync.Psn.Client, as: PsnClient
   alias ProjetoPrisma.Utils.Psn.Psn_Auth
   alias ProjetoPrisma.Utils.Psn.Psn_Profile
 
@@ -57,7 +56,7 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
      |> assign(:profile_id, profile_id)
      |> assign(:modal_open, false)
      |> assign(:modal_platform, nil)
-    |> assign(:modal_error, nil)
+     |> assign(:modal_error, nil)
      |> assign(:form, to_form(%{"user_id" => "", "api_key" => ""}, as: :steam))
      |> assign(:psn_form, to_form(%{"psn_id" => "", "api_key" => ""}, as: :psn))
      |> refresh_platforms()}
@@ -93,7 +92,8 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
 
     cond do
       is_nil(platform) ->
-        {:noreply, put_flash(socket, :error, "Plataforma RetroAchievements não encontrada na tela")}
+        {:noreply,
+         put_flash(socket, :error, "Plataforma RetroAchievements não encontrada na tela")}
 
       platform.connected ->
         disconnect_retro(socket)
@@ -142,7 +142,7 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
      socket
      |> assign(:modal_open, false)
      |> assign(:modal_platform, nil)
-      |> assign(:modal_error, nil)
+     |> assign(:modal_error, nil)
      |> assign(:form, to_form(%{"user_id" => "", "api_key" => ""}, as: :steam))
      |> assign(:psn_form, to_form(%{"psn_id" => "", "api_key" => ""}, as: :psn))}
   end
@@ -262,7 +262,7 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
        |> refresh_platforms()
        |> assign(:modal_open, false)
        |> assign(:modal_platform, nil)
-      |> assign(:modal_error, nil)
+       |> assign(:modal_error, nil)
        |> assign(:form, to_form(%{"user_id" => "", "api_key" => ""}, as: :steam))
        |> put_flash(:info, "Conta Steam vinculada com sucesso")}
     else
@@ -328,7 +328,7 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
        |> refresh_platforms()
        |> assign(:modal_open, false)
        |> assign(:modal_platform, nil)
-      |> assign(:modal_error, nil)
+       |> assign(:modal_error, nil)
        |> assign(:psn_form, to_form(%{"psn_id" => psn_id, "api_key" => npsso}, as: :psn))
        |> put_flash(:info, "Conta PlayStation vinculada com sucesso")}
     else
@@ -353,21 +353,24 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
 
       {:error, {:psn_http_status, 401}} ->
         {:noreply,
-        socket
-        |> assign(
-          :modal_error,
-          "Token de Acesso expirado ou inválido. Gere um novo Token em " <>
-          "ca.account.sony.com/api/v1/ssocookie"
-        )
-        |> put_flash(:error, "Token PSN expirado")
-        |> assign(:psn_form, to_form(%{"psn_id" => "", "api_key" => ""}, as: :psn))}
+         socket
+         |> assign(
+           :modal_error,
+           "Token de Acesso expirado ou inválido. Gere um novo Token em " <>
+             "ca.account.sony.com/api/v1/ssocookie"
+         )
+         |> put_flash(:error, "Token PSN expirado")
+         |> assign(:psn_form, to_form(%{"psn_id" => "", "api_key" => ""}, as: :psn))}
 
       {:error, {:psn_http_status, 404}} ->
         {:noreply,
-        socket
-        |> assign(:modal_error, "PSN ID não encontrado. Verifique se o nome de usuário está correto.")
-        |> put_flash(:error, "PSN ID não encontrado")
-        |> assign(:psn_form, to_form(%{"psn_id" => "", "api_key" => ""}, as: :psn))}
+         socket
+         |> assign(
+           :modal_error,
+           "PSN ID não encontrado. Verifique se o nome de usuário está correto."
+         )
+         |> put_flash(:error, "PSN ID não encontrado")
+         |> assign(:psn_form, to_form(%{"psn_id" => "", "api_key" => ""}, as: :psn))}
 
       {:error, {:psn_http_status, status}} ->
         {:noreply,
@@ -391,14 +394,14 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
 
       {:error, :tosua_required} ->
         {:noreply,
-        socket
-        |> assign(
-          :modal_error,
-          "Sua conta Sony requer que você reaceite os Termos de Uso. " <>
-          "Acesse playstation.com, faça login, aceite os termos e gere um novo Token em " <>
-          "ca.account.sony.com/api/v1/ssocookie"
-        )
-        |> put_flash(:error, "Reaceite os Termos de Uso da Sony e gere um novo Token de Acesso")}
+         socket
+         |> assign(
+           :modal_error,
+           "Sua conta Sony requer que você reaceite os Termos de Uso. " <>
+             "Acesse playstation.com, faça login, aceite os termos e gere um novo Token em " <>
+             "ca.account.sony.com/api/v1/ssocookie"
+         )
+         |> put_flash(:error, "Reaceite os Termos de Uso da Sony e gere um novo Token de Acesso")}
 
       {:error, _changeset} ->
         {:noreply,
@@ -535,7 +538,8 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
         {:noreply, put_flash(socket, :error, "Plataforma RetroAchievements não cadastrada")}
 
       {:error, _reason} ->
-        {:noreply, put_flash(socket, :error, "Não foi possível desvincular a conta RetroAchievements")}
+        {:noreply,
+         put_flash(socket, :error, "Não foi possível desvincular a conta RetroAchievements")}
     end
   end
 
@@ -647,9 +651,18 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
               <%= if @modal_platform.slug == "playstation" do %>
                 <p class="connect-modal-instruction">
                   Insira seu PSN ID e seu Token de Acesso para validar e vincular a conta.
-                  <br><br>
-                  <strong>Como obter o Token de Acesso (NPSSO):</strong><br>
-                  Acesse <a href="https://ca.account.sony.com/api/v1/ssocookie" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: underline;">https://ca.account.sony.com/api/v1/ssocookie</a> enquanto conectado na sua conta PlayStation.
+                  <br /><br />
+                  <strong>Como obter o Token de Acesso (NPSSO):</strong>
+                  <br /> Acesse
+                  <a
+                    href="https://ca.account.sony.com/api/v1/ssocookie"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="color: #3b82f6; text-decoration: underline;"
+                  >
+                    https://ca.account.sony.com/api/v1/ssocookie
+                  </a>
+                  enquanto conectado na sua conta PlayStation.
                 </p>
 
                 <p :if={@modal_error} class="connect-modal-error" role="alert">{@modal_error}</p>
@@ -677,7 +690,7 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
                 </div>
               <% else %>
                 <p class="connect-modal-instruction">
-                  Insira seu nome de usuário e sua Web API Key para validar e vincular a conta.<br>
+                  Insira seu nome de usuário e sua Web API Key para validar e vincular a conta.<br />
                   É possível obter a Web API Key no menu de configurações do site Retro Achievements.
                 </p>
 
@@ -727,8 +740,7 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
         navigate={~p"/"}
         class="connect-continue-btn"
       >
-        <.icon name="hero-arrow-right" class="size-4" />
-        Continuar depois
+        <.icon name="hero-arrow-right" class="size-4" /> Continuar depois
       </.link>
     </div>
 
@@ -750,10 +762,17 @@ defmodule ProjetoPrismaWeb.ConnectPlatformsCardsLive do
           phx-value-platform={platform.slug}
           data-confirm={
             cond do
-              platform.connected && platform.slug == "steam" -> "Deseja desvincular sua conta Steam?"
-              platform.connected && platform.slug == "playstation" -> "Deseja desvincular sua conta PlayStation?"
-              platform.connected && platform.slug == "retroachievements" -> "Deseja desvincular sua conta RetroAchievements?"
-              true -> nil
+              platform.connected && platform.slug == "steam" ->
+                "Deseja desvincular sua conta Steam?"
+
+              platform.connected && platform.slug == "playstation" ->
+                "Deseja desvincular sua conta PlayStation?"
+
+              platform.connected && platform.slug == "retroachievements" ->
+                "Deseja desvincular sua conta RetroAchievements?"
+
+              true ->
+                nil
             end
           }
           class={[

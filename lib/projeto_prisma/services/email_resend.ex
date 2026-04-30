@@ -1,10 +1,7 @@
 defmodule ProjetoPrisma.Services.EmailResend do
-
   @from_email "onboarding@resend.dev"
 
   def send_password_reset_email(email, reset_url) do
-    client = Resend.client(api_key: get_api_key())
-
     html_body = """
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
       <h2>Recuperação de Senha</h2>

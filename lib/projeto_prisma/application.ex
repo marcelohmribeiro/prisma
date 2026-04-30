@@ -13,6 +13,7 @@ defmodule ProjetoPrisma.Application do
       ProjetoPrisma.RateLimiter,
       {DNSCluster, query: Application.get_env(:projeto_prisma, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: ProjetoPrisma.PubSub},
+      {Task.Supervisor, name: ProjetoPrisma.SyncTaskSupervisor},
       # Start a worker by calling: ProjetoPrisma.Worker.start_link(arg)
       # {ProjetoPrisma.Worker, arg},
       # Start to serve requests, typically the last entry

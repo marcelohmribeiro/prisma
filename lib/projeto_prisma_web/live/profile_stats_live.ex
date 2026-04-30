@@ -35,7 +35,9 @@ defmodule ProjetoPrismaWeb.ProfileStatsLive do
         <i class="fas fa-trophy trophy-icon stat-icon"></i>
         <div class="stat-content">
           <div class="stat-title text-gray-400 text-sm uppercase tracking-wide">Conquistas</div>
-          <h3 class="stat-value text-4xl font-bold mb-1">{format_number(@stats.total_achievements)}</h3>
+          <h3 class="stat-value text-4xl font-bold mb-1">
+            {format_number(@stats.total_achievements)}
+          </h3>
         </div>
       </div>
     </div>
@@ -45,7 +47,9 @@ defmodule ProjetoPrismaWeb.ProfileStatsLive do
       <div class="stat-inner">
         <i class="fas fa-gamepad controller-icon stat-icon"></i>
         <div class="stat-content">
-          <div class="stat-title text-gray-400 text-sm uppercase tracking-wide">Média de Conclusão</div>
+          <div class="stat-title text-gray-400 text-sm uppercase tracking-wide">
+            Média de Conclusão
+          </div>
           <div class="stat-value flex items-center justify-start md:justify-center gap-2 mb-1">
             <h3 class="text-4xl font-bold gradient-text">{display_avg(@stats.avg_completion)}</h3>
             <span class="text-2xl font-bold text-gray-400">%</span>
@@ -57,7 +61,8 @@ defmodule ProjetoPrismaWeb.ProfileStatsLive do
           <div
             class="progress-fill bg-gradient-to-r from-blue-500 to-blue-600"
             style={"width: #{progress_width(@stats.avg_completion)}%;"}
-          ></div>
+          >
+          </div>
         </div>
       </div>
     </div>

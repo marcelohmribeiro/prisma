@@ -6,6 +6,10 @@ defmodule ProjetoPrismaWeb.PageController do
   alias ProjetoPrisma.Sync.SyncService
   alias ProjetoPrismaWeb.UserAuth
 
+  require Logger
+
+  @stale_sync_after_seconds 300
+
   def home(conn, _params) do
     render(conn, :home)
   end
@@ -14,12 +18,8 @@ defmodule ProjetoPrismaWeb.PageController do
     render(conn, :connect_platforms)
   end
 
-  def dashboard(conn, _params) do
-    conn = prepare_dashboard_sync(conn)
-    render(conn, :dashboard)
-  end
-
   def profile(conn, _params) do
+    conn = prepare_dashboard_sync(conn)
     render(conn, :profile)
   end
 
@@ -57,6 +57,7 @@ defmodule ProjetoPrismaWeb.PageController do
         sync_popup = dashboard_sync_popup(profile_id)
 
         conn
+        |> assign(:profile_id, profile_id)
         |> assign(:sync_popup, sync_popup)
         |> maybe_start_dashboard_sync(profile_id, sync_popup)
 
@@ -69,7 +70,17 @@ defmodule ProjetoPrismaWeb.PageController do
   defp maybe_start_dashboard_sync(conn, _profile_id, %{status: :failed}), do: conn
 
   defp maybe_start_dashboard_sync(conn, profile_id, %{status: :idle}) do
-    _ = Task.start(fn -> SyncService.sync_connected_platforms(profile_id) end)
+    case Task.Supervisor.start_child(ProjetoPrisma.SyncTaskSupervisor, fn ->
+           SyncService.sync_connected_platforms(profile_id)
+         end) do
+      {:ok, pid} ->
+        Logger.info("Started dashboard sync for profile #{profile_id} in #{inspect(pid)}")
+
+      {:error, reason} ->
+        Logger.error(
+          "Could not start dashboard sync for profile #{profile_id}: #{inspect(reason)}"
+        )
+    end
 
     assign(conn, :sync_popup, %{
       status: :running,
@@ -80,19 +91,23 @@ defmodule ProjetoPrismaWeb.PageController do
     })
   end
 
+  defp maybe_start_dashboard_sync(conn, _profile_id, _), do: conn
+
   defp dashboard_sync_popup(profile_id) do
     accounts = Accounts.list_connected_platform_accounts(profile_id)
-    running_accounts = Enum.filter(accounts, &(&1.sync_status == "running"))
+    {fresh_running_accounts, stale_running_accounts} = split_running_accounts(accounts)
     failed_accounts = Enum.filter(accounts, &(&1.sync_status == "failed"))
+    pending_accounts = Enum.filter(accounts, &pending_sync_account?/1)
+    syncable_count = length(pending_accounts) + length(stale_running_accounts)
 
     cond do
-      running_accounts != [] ->
+      fresh_running_accounts != [] ->
         %{
           status: :running,
           title: "Sincronização em andamento",
           message: "Estamos atualizando jogos e troféus agora.",
           progress: true,
-          count: length(running_accounts)
+          count: length(fresh_running_accounts)
         }
 
       failed_accounts != [] ->
@@ -104,17 +119,36 @@ defmodule ProjetoPrismaWeb.PageController do
           count: length(failed_accounts)
         }
 
-      accounts != [] ->
+      syncable_count > 0 ->
         %{
           status: :idle,
           title: "Sincronização iniciando",
           message: "Preparando atualização de jogos e troféus.",
           progress: true,
-          count: length(accounts)
+          count: syncable_count
         }
 
       true ->
         nil
+    end
+  end
+
+  defp pending_sync_account?(account), do: account.sync_status in [nil, "idle"]
+
+  defp split_running_accounts(accounts) do
+    accounts
+    |> Enum.filter(&(&1.sync_status == "running"))
+    |> Enum.split_with(&fresh_running_account?/1)
+  end
+
+  defp fresh_running_account?(account) do
+    case account.sync_started_at do
+      %NaiveDateTime{} = started_at ->
+        NaiveDateTime.diff(NaiveDateTime.utc_now(), started_at, :second) <
+          @stale_sync_after_seconds
+
+      _ ->
+        false
     end
   end
 
@@ -133,11 +167,4 @@ defmodule ProjetoPrismaWeb.PageController do
         end
     end
   end
-
-  defp maybe_put_sync_failure_flash(conn, failed) when failed > 0 do
-    put_flash(conn, :error, "#{failed} conta(s) falharam na sincronização e podem ser retomadas depois.")
-  end
-
-  defp maybe_put_sync_failure_flash(conn, _failed), do: conn
-
 end

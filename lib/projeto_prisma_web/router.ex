@@ -26,9 +26,8 @@ defmodule ProjetoPrismaWeb.Router do
   scope "/", ProjetoPrismaWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    get "/", PageController, :dashboard
+    get "/", PageController, :profile
     get "/connect-platforms", PageController, :connect_platforms
-    get "/profile", PageController, :profile
   end
 
   scope "/", ProjetoPrismaWeb do

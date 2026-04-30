@@ -15,14 +15,14 @@ defmodule ProjetoPrisma.Sync.Adapters do
       ProjetoPrisma.Sync.Steam.Adapter
 
       iex> ProjetoPrisma.Sync.Adapters.get_adapter(:playstation)
-      ProjetoPrisma.Sync.PlayStation.Adapter
+      ProjetoPrisma.Sync.Psn.Adapter
 
       iex> ProjetoPrisma.Sync.Adapters.get_adapter(:invalid)
       {:error, "Plataforma invalid não suportada"}
   """
   def get_adapter(:steam), do: ProjetoPrisma.Sync.Steam.Adapter
-  def get_adapter(:playstation), do: ProjetoPrisma.Sync.PlayStation.Adapter
-  def get_adapter(:xbox), do: ProjetoPrisma.Sync.Xbox.Adapter
+  def get_adapter(:playstation), do: ProjetoPrisma.Sync.Psn.Adapter
+  def get_adapter(:xbox), do: {:error, "Plataforma xbox não suportada"}
   def get_adapter(:retroachievements), do: ProjetoPrisma.Sync.RetroAchievements.Adapter
 
   def get_adapter(platform) do

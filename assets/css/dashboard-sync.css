@@ -1,0 +1,191 @@
+/* ===========================
+   DASHBOARD SYNC POPUP
+   =========================== */
+.dashboard-sync-popup {
+  position: fixed;
+  inset: 0; /* covers whole viewport */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2,6,23,0.45);
+  z-index: 60;
+  backdrop-filter: blur(6px) saturate(1.05);
+  -webkit-backdrop-filter: blur(6px) saturate(1.05);
+  padding: 1rem;
+}
+
+.dashboard-sync-popup .popup-card {
+  width: min(720px, 96%);
+  background: linear-gradient(180deg, rgba(8,10,15,0.95), rgba(12,14,20,0.96));
+  border: 1px solid rgba(96,165,250,0.08);
+  box-shadow: 0 12px 40px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+  border-radius: 12px;
+  padding: 20px;
+  color: #e6eef8;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.dashboard-sync-popup .popup-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,#0ea5e9,#60a5fa);
+  box-shadow: 0 8px 20px rgba(96,165,250,0.12);
+  flex-shrink: 0;
+}
+
+.sync-spin-slow {
+  animation: sync-spin 1.8s linear infinite;
+}
+
+.dashboard-sync-popup .popup-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dashboard-sync-popup .popup-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.dashboard-sync-popup .popup-message {
+  color: #bcd7ff;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.dashboard-sync-popup .popup-count {
+  font-weight: 700;
+  color: #93c5fd;
+  margin-left: 6px;
+}
+
+.dashboard-sync-popup .popup-games-info {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 6px;
+  border-left: 2px solid rgba(96,165,250,0.3);
+}
+
+.dashboard-sync-popup .popup-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dashboard-sync-popup .popup-progress .progress-bar {
+  height: 10px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.dashboard-sync-popup .progress-fill {
+  background: linear-gradient(90deg,#60a5fa 0%, #0ea5e9 100%);
+  width: 0%;
+  transition: width 600ms cubic-bezier(.2,.9,.2,1);
+}
+
+.dashboard-sync-popup .popup-progress-text {
+  font-size: 0.8rem;
+  color: #60a5fa;
+  font-weight: 600;
+  text-align: right;
+  margin-top: -4px;
+}
+
+.dashboard-sync-popup .popup-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.dashboard-sync-popup .btn-dismiss-sync {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #dbeafe;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+}
+
+.dashboard-sync-popup .btn-dismiss-sync:hover {
+  background: rgba(96,165,250,0.1);
+  border-color: rgba(96,165,250,0.3);
+}
+
+.dashboard-sync-mini {
+  position: fixed;
+  left: 8px;
+  bottom: 72px;
+  z-index: 140;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  border-radius: 10px;
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.16);
+  box-shadow: 0 0 15px rgba(96, 165, 250, 0.28);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.dashboard-sync-mini:hover {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.75);
+  background: rgba(14, 165, 233, 0.2);
+}
+
+@keyframes sync-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-sync-popup .popup-card { 
+    flex-direction: column; 
+    align-items: stretch; 
+    padding: 14px; 
+  }
+  .dashboard-sync-popup .popup-icon { 
+    width: 54px; 
+    height: 54px; 
+    margin: 0 auto; 
+  }
+  .dashboard-sync-popup .popup-title { 
+    text-align: center; 
+  }
+  .dashboard-sync-popup .popup-message { 
+    text-align: center; 
+  }
+  .dashboard-sync-popup .popup-games-info {
+    text-align: center;
+    border-left: none;
+    border-top: 2px solid rgba(96,165,250,0.3);
+    padding-left: 12px;
+    padding-top: 8px;
+  }
+
+  .dashboard-sync-mini {
+    left: auto;
+    right: 72px;
+    bottom: 8px;
+  }
+}

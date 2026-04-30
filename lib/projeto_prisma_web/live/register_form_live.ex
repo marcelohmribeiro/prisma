@@ -67,7 +67,8 @@ defmodule ProjetoPrismaWeb.RegisterFormLive do
 
     cond do
       String.length(full_name) < 3 ->
-        {:noreply, assign(socket, :form_errors, [{:full_name, "deve ter no minimo 3 caracteres"}])}
+        {:noreply,
+         assign(socket, :form_errors, [{:full_name, "deve ter no minimo 3 caracteres"}])}
 
       String.length(nickname) < 3 ->
         {:noreply, assign(socket, :form_errors, [{:username, "deve ter no minimo 3 caracteres"}])}
@@ -82,7 +83,8 @@ defmodule ProjetoPrismaWeb.RegisterFormLive do
         {:noreply, assign(socket, :form_errors, [{:password, "deve ter no minimo 6 caracteres"}])}
 
       password != confirm_password ->
-        {:noreply, assign(socket, :form_errors, [{:confirm_password, "nao coincide com a senha"}])}
+        {:noreply,
+         assign(socket, :form_errors, [{:confirm_password, "nao coincide com a senha"}])}
 
       true ->
         register_user(socket, %{
@@ -126,7 +128,9 @@ defmodule ProjetoPrismaWeb.RegisterFormLive do
   defp field_label(:email), do: "E-mail"
   defp field_label(:password), do: "Senha"
   defp field_label(:confirm_password), do: "Confirmar senha"
-  defp field_label(field), do: field |> to_string() |> String.replace("_", " ") |> String.capitalize()
+
+  defp field_label(field),
+    do: field |> to_string() |> String.replace("_", " ") |> String.capitalize()
 
   defp format_error_message(:username, "has already been taken") do
     "O nome de usuario escolhido já está em uso, por favor altere."
@@ -142,13 +146,18 @@ defmodule ProjetoPrismaWeb.RegisterFormLive do
   def render(assigns) do
     ~H"""
     <%= if @registration_complete do %>
-      <form id="complete-registration-form" action="/complete-registration" method="post" phx-hook="AutoSubmit">
+      <form
+        id="complete-registration-form"
+        action="/complete-registration"
+        method="post"
+        phx-hook="AutoSubmit"
+      >
         <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()} />
         <input type="hidden" name="token" value={@registration_token} />
         <p style="text-align: center; color: #a0a0a0;">Finalizando cadastro...</p>
       </form>
     <% else %>
-      <div class="error-message" :if={@form_errors != []} id="errorMessage" style="display: flex;">
+      <div :if={@form_errors != []} class="error-message" id="errorMessage" style="display: flex;">
         <i class="fas fa-exclamation-circle"></i>
         <div class="error-message-content" id="errorText">
           <p class="error-message-title">Verifique os campos abaixo:</p>
@@ -240,7 +249,11 @@ defmodule ProjetoPrismaWeb.RegisterFormLive do
               phx-click="toggle_password"
               phx-value-field="password"
             >
-              <i class={"fas #{if @show_password, do: "fa-eye-slash", else: "fa-eye"}"} id="toggleIcon1"></i>
+              <i
+                class={"fas #{if @show_password, do: "fa-eye-slash", else: "fa-eye"}"}
+                id="toggleIcon1"
+              >
+              </i>
             </button>
           </div>
         </div>
@@ -265,7 +278,11 @@ defmodule ProjetoPrismaWeb.RegisterFormLive do
               phx-click="toggle_password"
               phx-value-field="confirm_password"
             >
-              <i class={"fas #{if @show_confirm_password, do: "fa-eye-slash", else: "fa-eye"}"} id="toggleIcon2"></i>
+              <i
+                class={"fas #{if @show_confirm_password, do: "fa-eye-slash", else: "fa-eye"}"}
+                id="toggleIcon2"
+              >
+              </i>
             </button>
           </div>
         </div>

@@ -29,7 +29,10 @@ defmodule ProjetoPrismaWeb.ProfileCardLive do
   end
 
   defp get_user_full_name(nil), do: ""
-  defp get_user_full_name(%{user: %{full_name: full_name}}) when is_binary(full_name), do: full_name
+
+  defp get_user_full_name(%{user: %{full_name: full_name}}) when is_binary(full_name),
+    do: full_name
+
   defp get_user_full_name(_), do: ""
 
   @impl true
@@ -105,7 +108,10 @@ defmodule ProjetoPrismaWeb.ProfileCardLive do
         changeset =
           socket.assigns.current_scope
           |> Accounts.change_profile(params)
-          |> Ecto.Changeset.add_error(:username, "deve conter apenas letras, numeros e underscores")
+          |> Ecto.Changeset.add_error(
+            :username,
+            "deve conter apenas letras, numeros e underscores"
+          )
           |> Map.put(:action, :validate)
 
         {:noreply,
@@ -225,8 +231,8 @@ defmodule ProjetoPrismaWeb.ProfileCardLive do
       <div :if={profile_bio(@profile) != ""} class="mt-4 text-sm text-gray-400" id="profile-bio">
         <p>{profile_bio(@profile)}</p>
       </div>
-
-      <!-- Pinned Achievements -->
+      
+    <!-- Pinned Achievements -->
       <div class="mt-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">
@@ -324,8 +330,7 @@ defmodule ProjetoPrismaWeb.ProfileCardLive do
 
             <label class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-blue-400 font-medium rounded-lg transition-all duration-300 flex items-center gap-2 cursor-pointer">
               <i class="fas fa-camera"></i>
-              Escolher Foto
-              <.live_file_input upload={@uploads.avatar} class="hidden" />
+              Escolher Foto <.live_file_input upload={@uploads.avatar} class="hidden" />
             </label>
 
             <p class="text-gray-500 text-sm mt-2">JPG, PNG, GIF ou WebP. Maximo 2MB.</p>
@@ -430,7 +435,10 @@ defmodule ProjetoPrismaWeb.ProfileCardLive do
   end
 
   defp error_to_string(:too_large), do: "Arquivo muito grande. Maximo 2MB."
-  defp error_to_string(:not_accepted), do: "Tipo de arquivo nao aceito. Use JPG, PNG, GIF ou WebP."
+
+  defp error_to_string(:not_accepted),
+    do: "Tipo de arquivo nao aceito. Use JPG, PNG, GIF ou WebP."
+
   defp error_to_string(:too_many_files), do: "Apenas uma imagem por vez."
   defp error_to_string(_), do: "Erro ao processar arquivo."
 

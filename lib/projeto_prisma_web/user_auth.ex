@@ -29,15 +29,17 @@ defmodule ProjetoPrismaWeb.UserAuth do
   @doc """
   Logs the user in.
 
-  Redirects to the session's `:user_return_to` path
-  or falls back to the `signed_in_path/1`.
+  Redirects users without a connected platform account to the account linking
+  screen, otherwise it uses the session's `:user_return_to` path or falls back
+  to the signed-in home page.
   """
   def log_in_user(conn, user, params \\ %{}) do
     user_return_to = get_session(conn, :user_return_to)
+    redirect_to = login_destination(user, user_return_to)
 
     conn
     |> create_or_extend_session(user, params)
-    |> redirect(to: user_return_to || signed_in_path(conn))
+    |> redirect(to: redirect_to)
   end
 
   @doc """
@@ -185,16 +187,36 @@ defmodule ProjetoPrismaWeb.UserAuth do
   Plug for routes that require the user to not be authenticated.
   """
   def redirect_if_user_is_authenticated(conn, _opts) do
-    if conn.assigns.current_scope do
+    if conn.assigns.current_scope && conn.assigns.current_scope.user do
       conn
-      |> redirect(to: signed_in_path(conn))
+      |> redirect(to: signed_in_path_for_user(conn.assigns.current_scope.user))
       |> halt()
     else
       conn
     end
   end
 
-  defp signed_in_path(_conn), do: ~p"/"
+  defp login_destination(user, user_return_to) do
+    if user_has_connected_platform_account?(user) do
+      user_return_to || ~p"/"
+    else
+      ~p"/connect-platforms"
+    end
+  end
+
+  defp signed_in_path_for_user(user) do
+    if user_has_connected_platform_account?(user), do: ~p"/", else: ~p"/connect-platforms"
+  end
+
+  defp user_has_connected_platform_account?(user) do
+    user
+    |> Scope.for_user()
+    |> Accounts.get_profile_with_user()
+    |> case do
+      %{id: profile_id} -> Accounts.list_connected_platform_accounts(profile_id) != []
+      _ -> false
+    end
+  end
 
   @doc """
   Plug for routes that require the user to be authenticated.

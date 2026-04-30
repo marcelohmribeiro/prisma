@@ -27,7 +27,7 @@ defmodule ProjetoPrismaWeb.Layouts.Navbar do
 
       <%!-- Ícone: Ranking --%>
       <.sidebar_icon
-        href={~p"/ranking"}
+        href="/ranking"
         label="Ranking"
         active={String.starts_with?(@current_path, "/ranking")}
         icon="fa-trophy"
@@ -35,7 +35,7 @@ defmodule ProjetoPrismaWeb.Layouts.Navbar do
 
       <%!-- Ícone: Seguidores --%>
       <.sidebar_icon
-        href={~p"/followers"}
+        href="/followers"
         label="Seguidores"
         active={String.starts_with?(@current_path, "/followers")}
         icon="fa-users"

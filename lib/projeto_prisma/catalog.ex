@@ -22,22 +22,31 @@ defmodule ProjetoPrisma.Catalog do
   """
   def get_or_create_game(attrs) do
     igdb_id = attrs["igdb_id"] || attrs[:igdb_id]
+    name = attrs["name"] || attrs[:name]
 
-    if is_nil(igdb_id) do
-      {:error, :igdb_id_required}
-    else
-      case Repo.get_by(Game, igdb_id: igdb_id) do
-        nil ->
-          %Game{}
-          |> Game.changeset(attrs)
-          |> Repo.insert()
+    case get_existing_game(igdb_id, name) do
+      nil ->
+        %Game{}
+        |> Game.changeset(attrs)
+        |> Repo.insert()
 
-        game ->
-          game
-          |> Game.changeset(attrs)
-          |> Repo.update()
-      end
+      game ->
+        game
+        |> Game.changeset(attrs)
+        |> Repo.update()
     end
+  end
+
+  defp get_existing_game(nil, name) when is_binary(name) do
+    Game
+    |> where([game], is_nil(game.igdb_id) and game.name == ^name)
+    |> Repo.one()
+  end
+
+  defp get_existing_game(nil, _name), do: nil
+
+  defp get_existing_game(igdb_id, name) do
+    Repo.get_by(Game, igdb_id: igdb_id) || get_existing_game(nil, name)
   end
 
   @doc """
@@ -62,7 +71,7 @@ defmodule ProjetoPrisma.Catalog do
       nil ->
         %PlatformGame{}
         |> PlatformGame.changeset(
-          Map.merge(attrs, %{
+          Map.merge(stringify_keys(attrs), %{
             "platform_id" => platform_id,
             "game_id" => game_id
           })
@@ -109,7 +118,7 @@ defmodule ProjetoPrisma.Catalog do
       nil ->
         %Achievement{}
         |> Achievement.changeset(
-          Map.merge(attrs, %{
+          Map.merge(stringify_keys(attrs), %{
             "platform_game_id" => platform_game_id
           })
         )
@@ -145,5 +154,9 @@ defmodule ProjetoPrisma.Catalog do
     Achievement
     |> where(platform_game_id: ^platform_game_id)
     |> Repo.aggregate(:count, :id)
+  end
+
+  defp stringify_keys(attrs) when is_map(attrs) do
+    Map.new(attrs, fn {key, value} -> {to_string(key), value} end)
   end
 end
