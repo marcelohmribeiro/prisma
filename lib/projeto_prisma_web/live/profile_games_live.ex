@@ -19,6 +19,7 @@ defmodule ProjetoPrismaWeb.ProfileGamesLive do
       |> assign(:sort_order, :desc)
       |> assign(:search_query, "")
       |> assign(:search_form, to_form(%{"query" => ""}, as: :search))
+      |> assign(:selected_game, nil)
       |> assign(:games_empty?, true)
       |> assign(:has_next_page?, false)
       |> assign(:has_previous_page?, false)
@@ -74,6 +75,24 @@ defmodule ProjetoPrismaWeb.ProfileGamesLive do
       |> load_page(1)
 
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("open_game_modal", %{"profile-game-id" => profile_game_id}, socket) do
+    game =
+      with profile_id when is_integer(profile_id) <- socket.assigns.profile_id,
+           game_id when is_integer(game_id) <- parse_integer(profile_game_id) do
+        ProfileDashboard.game_details(profile_id, game_id)
+      else
+        _ -> nil
+      end
+
+    {:noreply, assign(socket, :selected_game, game)}
+  end
+
+  @impl true
+  def handle_event("close_game_modal", _params, socket) do
+    {:noreply, assign(socket, :selected_game, nil)}
   end
 
   @impl true
@@ -141,94 +160,109 @@ defmodule ProjetoPrismaWeb.ProfileGamesLive do
 
       <div id="profile-games-list" class="space-y-2 mt-2" phx-update="stream">
         <div :for={{dom_id, game} <- @streams.games} id={dom_id}>
-          <%!-- Card mobile --%>
-          <div class="mobile-game-card md:hidden p-3 rounded-lg mb-2 bg-transparent">
-            <div class="mobile-top-row flex items-center gap-3">
-              <img
-                src={cover_image(game)}
-                alt={game.game_name}
-                class="w-12 h-12 rounded object-cover"
-              />
-              <div class="mobile-meta flex-1">
-                <div class="flex items-center justify-between">
-                  <div class="mobile-title font-semibold text-base">{game.game_name}</div>
-                  <div class="mobile-trophies text-sm flex items-center gap-2">
-                    <.icon name="hero-trophy" class="size-4 text-yellow-400" />
-                    <span class="font-semibold">
-                      {game.unlocked_achievements} / {game.total_achievements}
-                    </span>
-                  </div>
-                </div>
-                <div class="mt-2">
-                  <div class="progress-bar bg-gray-700 rounded-full overflow-hidden h-2">
-                    <div
-                      class="progress-fill bg-emerald-500"
-                      style={"width: #{game.completion_percent}%;"}
-                    >
+          <button
+            id={"profile-games-open-#{game.profile_game_id}"}
+            type="button"
+            phx-click="open_game_modal"
+            phx-value-profile-game-id={game.profile_game_id}
+            class="block w-full text-left"
+          >
+            <%!-- Card mobile --%>
+            <div class="mobile-game-card mb-2 rounded-lg bg-transparent p-3 transition hover:bg-gray-700/20 md:hidden">
+              <div class="mobile-top-row flex items-center gap-3">
+                <img
+                  src={cover_image(game)}
+                  alt={game.game_name}
+                  class="h-12 w-12 rounded object-cover"
+                />
+                <div class="mobile-meta flex-1">
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="mobile-title font-semibold text-base">{game.game_name}</div>
+                    <div class="mobile-trophies flex items-center gap-2 text-sm">
+                      <.icon name="hero-trophy" class="size-4 text-yellow-400" />
+                      <span class="font-semibold">
+                        {game.unlocked_achievements} / {game.total_achievements}
+                      </span>
                     </div>
                   </div>
-                  <div class="flex items-center justify-between text-xs text-gray-400 mt-1">
-                    <span>{game.completion_percent}%</span>
-                    <span>{format_date(game.last_played)}</span>
+                  <div class="mt-2">
+                    <div class="progress-bar h-2 overflow-hidden rounded-full bg-gray-700">
+                      <div
+                        class="progress-fill bg-emerald-500"
+                        style={"width: #{game.completion_percent}%;"}
+                      >
+                      </div>
+                    </div>
+                    <div class="mt-1 flex items-center justify-between text-xs text-gray-400">
+                      <span>{game.completion_percent}%</span>
+                      <span>{format_date(game.last_played)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="mobile-meta-extra mt-2 text-xs text-gray-400 flex items-center justify-between gap-3">
-              <div>
-                <div class="font-semibold">{format_playtime(game.playtime_minutes)}</div>
-                <div class="text-xs text-gray-500">
-                  Total {format_playtime(game.playtime_minutes)}
+              <div class="mobile-meta-extra mt-2 flex items-center justify-between gap-3 text-xs text-gray-400">
+                <div>
+                  <div class="font-semibold">{format_playtime(game.playtime_minutes)}</div>
+                  <div class="text-xs text-gray-500">
+                    Total {format_playtime(game.playtime_minutes)}
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="platform-badge inline-block rounded bg-blue-700/30 px-3 py-1 text-xs">
+                    {game.platform_name}
+                  </span>
+                  <.icon name="hero-chevron-right" class="size-4 text-gray-500" />
                 </div>
               </div>
-              <div class="flex items-center space-x-2">
-                <span class="platform-badge inline-block px-3 py-1 rounded text-xs bg-blue-700/30">
-                  {game.platform_name}
+            </div>
+
+            <%!-- Linha desktop --%>
+            <div class="game-row hidden items-center gap-4 rounded-lg p-4 transition hover:bg-gray-700/20 md:grid md:grid-cols-12">
+              <div class="col-span-12 flex items-center space-x-3 md:col-span-3">
+                <img src={cover_image(game)} alt={game.game_name} class="game-thumbnail" />
+                <div>
+                  <div class="font-semibold">{game.game_name}</div>
+                  <div class="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                    <span>Ver detalhes</span>
+                    <.icon name="hero-chevron-right" class="size-3" />
+                  </div>
+                </div>
+              </div>
+              <div class="col-span-6 md:col-span-2">
+                <div class="progress-bar bg-gray-700">
+                  <div
+                    class="progress-fill bg-gradient-to-r from-green-500 to-emerald-600"
+                    style={"width: #{game.completion_percent}%;"}
+                  >
+                  </div>
+                </div>
+                <span class="mt-1 block text-xs text-gray-400">{game.completion_percent}%</span>
+              </div>
+              <div class="col-span-6 md:col-span-1">
+                <span class="text-sm">
+                  <.icon name="hero-trophy" class="mr-1 inline-block size-4 text-yellow-500" />
+                  {game.unlocked_achievements} / {game.total_achievements}
                 </span>
               </div>
-            </div>
-          </div>
-
-          <%!-- Linha desktop --%>
-          <div class="game-row hidden md:grid md:grid-cols-12 gap-4 p-4 rounded-lg items-center">
-            <div class="col-span-12 md:col-span-3 flex items-center space-x-3">
-              <img src={cover_image(game)} alt={game.game_name} class="game-thumbnail" />
-              <span class="font-semibold">{game.game_name}</span>
-            </div>
-            <div class="col-span-6 md:col-span-2">
-              <div class="progress-bar bg-gray-700">
-                <div
-                  class="progress-fill bg-gradient-to-r from-green-500 to-emerald-600"
-                  style={"width: #{game.completion_percent}%;"}
-                >
+              <div class="col-span-6 md:col-span-2">
+                <div class="text-sm">
+                  <div>{format_playtime(game.playtime_minutes)}</div>
+                  <div class="text-xs text-gray-400">
+                    Total {format_playtime(game.playtime_minutes)}
+                  </div>
                 </div>
               </div>
-              <span class="text-xs text-gray-400 mt-1 block">{game.completion_percent}%</span>
-            </div>
-            <div class="col-span-6 md:col-span-1">
-              <span class="text-sm">
-                <.icon name="hero-trophy" class="mr-1 inline-block size-4 text-yellow-500" />
-                {game.unlocked_achievements} / {game.total_achievements}
-              </span>
-            </div>
-            <div class="col-span-6 md:col-span-2">
-              <div class="text-sm">
-                <div>{format_playtime(game.playtime_minutes)}</div>
-                <div class="text-gray-400 text-xs">
-                  Total {format_playtime(game.playtime_minutes)}
-                </div>
+              <div class="col-span-6 md:col-span-2">
+                <span class="text-sm text-gray-400">{format_datetime(game.last_unlock_time)}</span>
+              </div>
+              <div class="col-span-6 md:col-span-1">
+                <span class="text-sm text-gray-400">{format_date(game.last_played)}</span>
+              </div>
+              <div class="col-span-6 md:col-span-1">
+                <span class="platform-badge">{game.platform_name}</span>
               </div>
             </div>
-            <div class="col-span-6 md:col-span-2">
-              <span class="text-sm text-gray-400">{format_datetime(game.last_unlock_time)}</span>
-            </div>
-            <div class="col-span-6 md:col-span-1">
-              <span class="text-sm text-gray-400">{format_date(game.last_played)}</span>
-            </div>
-            <div class="col-span-6 md:col-span-1">
-              <span class="platform-badge">{game.platform_name}</span>
-            </div>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -272,6 +306,12 @@ defmodule ProjetoPrismaWeb.ProfileGamesLive do
           </button>
         </div>
       </div>
+
+      <ProjetoPrismaWeb.ProfileGameModal.modal
+        :if={@selected_game}
+        game={@selected_game}
+        close_event="close_game_modal"
+      />
     </div>
     """
   end
@@ -332,6 +372,7 @@ defmodule ProjetoPrismaWeb.ProfileGamesLive do
     else
       socket
       |> assign(:current_page, page)
+      |> assign(:selected_game, nil)
       |> assign(:games_empty?, page_games == [])
       |> assign(:has_next_page?, has_next_page?)
       |> assign(:has_previous_page?, page > 1)
@@ -367,6 +408,15 @@ defmodule ProjetoPrismaWeb.ProfileGamesLive do
   end
 
   defp normalize_search_query(_search_query), do: ""
+
+  defp parse_integer(value) when is_binary(value) do
+    case Integer.parse(value) do
+      {integer, ""} -> integer
+      _ -> nil
+    end
+  end
+
+  defp parse_integer(_value), do: nil
 
   defp scope_user_id(%Scope{user: %{id: id}}) when is_integer(id), do: id
   defp scope_user_id(_), do: nil

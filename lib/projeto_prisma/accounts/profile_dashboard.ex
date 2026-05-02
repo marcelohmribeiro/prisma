@@ -34,6 +34,19 @@ defmodule ProjetoPrisma.Accounts.ProfileDashboard do
   def recently_played(_), do: nil
 
   @doc """
+  Retorna os detalhes de um jogo do profile com suas conquistas.
+  """
+  def game_details(profile_id, profile_game_id)
+      when is_integer(profile_id) and is_integer(profile_game_id) do
+    profile_id
+    |> games_with_metrics(profile_game_id: profile_game_id)
+    |> List.first()
+    |> maybe_put_game_achievements()
+  end
+
+  def game_details(_, _), do: nil
+
+  @doc """
   Lista jogos recentes com metricas para tabela.
   """
   def list_games(profile_id, limit \\ 10, opts \\ [])
@@ -152,10 +165,39 @@ defmodule ProjetoPrisma.Accounts.ProfileDashboard do
     Map.put(game, :recent_achievements, achievements)
   end
 
+  defp maybe_put_game_achievements(nil), do: nil
+
+  defp maybe_put_game_achievements(game) do
+    achievements =
+      Achievement
+      |> where([a], a.platform_game_id == ^game.platform_game_id)
+      |> join(:left, [a], pa in ProfileAchievement,
+        on: pa.achievement_id == a.id and pa.profile_game_id == ^game.profile_game_id
+      )
+      |> order_by(
+        [a, pa],
+        desc: fragment("COALESCE(?, false)", pa.achieved),
+        desc_nulls_last: pa.unlock_time,
+        asc: a.name
+      )
+      |> select([a, pa], %{
+        name: a.name,
+        description: a.description,
+        icon_image: a.icon_image,
+        icon_locked_image: a.icon_locked_image,
+        achieved: type(fragment("COALESCE(?, false)", pa.achieved), :boolean),
+        unlock_time: pa.unlock_time
+      })
+      |> Repo.all()
+
+    Map.put(game, :achievements, achievements)
+  end
+
   defp games_with_metrics(profile_id, opts \\ []) do
     limit = Keyword.get(opts, :limit)
     offset = Keyword.get(opts, :offset, 0)
     sort_order = Keyword.get(opts, :sort_order, :desc)
+    profile_game_id = Keyword.get(opts, :profile_game_id)
     search_query = normalize_search_query(Keyword.get(opts, :search_query, ""))
 
     base_query =
@@ -164,6 +206,7 @@ defmodule ProjetoPrisma.Accounts.ProfileDashboard do
       |> join(:inner, [pg], pgame in assoc(pg, :platform_game))
       |> join(:inner, [_pg, pgame], g in assoc(pgame, :game))
       |> join(:inner, [_pg, pgame, _g], p in assoc(pgame, :platform))
+      |> maybe_filter_by_profile_game_id(profile_game_id)
       |> maybe_filter_by_game_name(search_query)
       |> sort_by_last_played(sort_order)
       |> select([pg, pgame, g, p], %{
@@ -217,6 +260,12 @@ defmodule ProjetoPrisma.Accounts.ProfileDashboard do
   end
 
   defp maybe_offset(query, _offset), do: query
+
+  defp maybe_filter_by_profile_game_id(query, profile_game_id) when is_integer(profile_game_id) do
+    where(query, [pg, _pgame, _g, _p], pg.id == ^profile_game_id)
+  end
+
+  defp maybe_filter_by_profile_game_id(query, _profile_game_id), do: query
 
   defp maybe_filter_by_game_name(query, ""), do: query
 
