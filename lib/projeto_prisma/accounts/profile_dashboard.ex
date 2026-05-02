@@ -44,7 +44,8 @@ defmodule ProjetoPrisma.Accounts.ProfileDashboard do
       profile_id,
       limit: limit,
       offset: Keyword.get(opts, :offset, 0),
-      sort_order: Keyword.get(opts, :sort_order, :desc)
+      sort_order: Keyword.get(opts, :sort_order, :desc),
+      search_query: Keyword.get(opts, :search_query, "")
     )
   end
 
@@ -155,6 +156,7 @@ defmodule ProjetoPrisma.Accounts.ProfileDashboard do
     limit = Keyword.get(opts, :limit)
     offset = Keyword.get(opts, :offset, 0)
     sort_order = Keyword.get(opts, :sort_order, :desc)
+    search_query = normalize_search_query(Keyword.get(opts, :search_query, ""))
 
     base_query =
       ProfileGame
@@ -162,6 +164,7 @@ defmodule ProjetoPrisma.Accounts.ProfileDashboard do
       |> join(:inner, [pg], pgame in assoc(pg, :platform_game))
       |> join(:inner, [_pg, pgame], g in assoc(pgame, :game))
       |> join(:inner, [_pg, pgame, _g], p in assoc(pgame, :platform))
+      |> maybe_filter_by_game_name(search_query)
       |> sort_by_last_played(sort_order)
       |> select([pg, pgame, g, p], %{
         profile_game_id: pg.id,
@@ -215,6 +218,12 @@ defmodule ProjetoPrisma.Accounts.ProfileDashboard do
 
   defp maybe_offset(query, _offset), do: query
 
+  defp maybe_filter_by_game_name(query, ""), do: query
+
+  defp maybe_filter_by_game_name(query, search_query) do
+    where(query, [_pg, _pgame, g, _p], ilike(g.name, ^"%#{search_query}%"))
+  end
+
   defp sort_by_last_played(query, :asc) do
     order_by(query, [pg, _pgame, _g, _p], asc_nulls_last: pg.last_played, asc: pg.id)
   end
@@ -222,6 +231,13 @@ defmodule ProjetoPrisma.Accounts.ProfileDashboard do
   defp sort_by_last_played(query, _sort_order) do
     order_by(query, [pg, _pgame, _g, _p], desc_nulls_last: pg.last_played, desc: pg.id)
   end
+
+  defp normalize_search_query(search_query) when is_binary(search_query) do
+    search_query
+    |> String.trim()
+  end
+
+  defp normalize_search_query(_search_query), do: ""
 
   defp unlocked_counts_by_profile_game([]), do: %{}
 

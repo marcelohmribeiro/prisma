@@ -17,6 +17,8 @@ defmodule ProjetoPrismaWeb.ProfileGamesLive do
       |> assign(:profile_id, profile && profile.id)
       |> assign(:current_page, 1)
       |> assign(:sort_order, :desc)
+      |> assign(:search_query, "")
+      |> assign(:search_form, to_form(%{"query" => ""}, as: :search))
       |> assign(:games_empty?, true)
       |> assign(:has_next_page?, false)
       |> assign(:has_previous_page?, false)
@@ -62,11 +64,42 @@ defmodule ProjetoPrismaWeb.ProfileGamesLive do
   end
 
   @impl true
+  def handle_event("search_games", %{"search" => search_params}, socket) do
+    query = normalize_search_query(search_params["query"])
+
+    socket =
+      socket
+      |> assign(:search_query, query)
+      |> assign(:search_form, to_form(%{"query" => query}, as: :search))
+      |> load_page(1)
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div class="bg-gray-800/80 border border-gray-700 p-6 rounded-2xl w-full">
-      <div class="flex items-center justify-between mb-6">
+      <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <h2 class="text-2xl font-bold">Jogos</h2>
+
+        <.form
+          for={@search_form}
+          id="profile-games-search-form"
+          phx-change="search_games"
+          phx-submit="search_games"
+          class="w-full lg:max-w-sm"
+        >
+          <.input
+            field={@search_form[:query]}
+            type="text"
+            placeholder="Buscar jogo pelo nome"
+            autocomplete="off"
+            phx-debounce="300"
+            aria-label="Buscar jogo pelo nome"
+            class="w-full rounded-2xl border border-gray-700 bg-gray-900/80 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-emerald-400"
+          />
+        </.form>
       </div>
 
       <%!-- Cabeçalho desktop --%>
@@ -90,25 +123,23 @@ defmodule ProjetoPrismaWeb.ProfileGamesLive do
         <div class="col-span-1 table-header">Plataforma</div>
       </div>
 
-      <div id="profile-games-list" class="space-y-2 mt-2" phx-update="stream">
-        <div
-          :if={@games_empty?}
-          id="profile-games-empty"
-          class="rounded-2xl border border-dashed border-gray-700 bg-gray-900/40 px-5 py-10 text-center"
-        >
-          <div class="mx-auto flex max-w-md flex-col items-center gap-3">
-            <div class="rounded-full border border-emerald-500/30 bg-emerald-500/10 p-3">
-              <.icon name="hero-information-circle" class="size-6 text-emerald-300" />
-            </div>
-            <div>
-              <p class="text-lg font-semibold text-white">Sem jogos sincronizados</p>
-              <p class="mt-1 text-sm text-gray-400">
-                Conecte uma plataforma para começar a preencher seu histórico de jogos.
-              </p>
-            </div>
+      <div
+        :if={@games_empty?}
+        id="profile-games-empty"
+        class="mt-2 rounded-2xl border border-dashed border-gray-700 bg-gray-900/40 px-5 py-10 text-center"
+      >
+        <div class="mx-auto flex max-w-md flex-col items-center gap-3">
+          <div class="rounded-full border border-emerald-500/30 bg-emerald-500/10 p-3">
+            <.icon name="hero-information-circle" class="size-6 text-emerald-300" />
+          </div>
+          <div>
+            <p class="text-lg font-semibold text-white">{empty_state_title(@search_query)}</p>
+            <p class="mt-1 text-sm text-gray-400">{empty_state_message(@search_query)}</p>
           </div>
         </div>
+      </div>
 
+      <div id="profile-games-list" class="space-y-2 mt-2" phx-update="stream">
         <div :for={{dom_id, game} <- @streams.games} id={dom_id}>
           <%!-- Card mobile --%>
           <div class="mobile-game-card md:hidden p-3 rounded-lg mb-2 bg-transparent">
@@ -281,12 +312,14 @@ defmodule ProjetoPrismaWeb.ProfileGamesLive do
     profile_id = socket.assigns.profile_id
     offset = (page - 1) * @page_size
     sort_order = socket.assigns.sort_order
+    search_query = socket.assigns.search_query
 
     games =
       if is_integer(profile_id) do
         ProfileDashboard.list_games(profile_id, @page_size + 1,
           offset: offset,
-          sort_order: sort_order
+          sort_order: sort_order,
+          search_query: search_query
         )
       else
         []
@@ -318,6 +351,22 @@ defmodule ProjetoPrismaWeb.ProfileGamesLive do
 
   defp sort_icon_name(:asc), do: "hero-chevron-up"
   defp sort_icon_name(_sort_order), do: "hero-chevron-down"
+
+  defp empty_state_title(""), do: "Sem jogos sincronizados"
+  defp empty_state_title(_search_query), do: "Nenhum jogo encontrado"
+
+  defp empty_state_message(""),
+    do: "Conecte uma plataforma para começar a preencher seu histórico de jogos."
+
+  defp empty_state_message(_search_query),
+    do: "Tente outro nome para localizar um jogo específico na sua biblioteca."
+
+  defp normalize_search_query(search_query) when is_binary(search_query) do
+    search_query
+    |> String.trim()
+  end
+
+  defp normalize_search_query(_search_query), do: ""
 
   defp scope_user_id(%Scope{user: %{id: id}}) when is_integer(id), do: id
   defp scope_user_id(_), do: nil
